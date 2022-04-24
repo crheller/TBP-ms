@@ -114,10 +114,25 @@ for sp, axes in zip(stim_pairs, decoding_space):
                               result.dU]
                             ).T
     df["class"] = pair_category
+    df["e1"] = sp[0]
+    df["e2"] = sp[1]
 
     output.append(df)
 
 output = pd.concat(output)
+
+dtypes = {
+    'dp': 'float32',
+    'wopt': 'object',
+    'evecs': 'object',
+    'evals': 'object',
+    'evecSim': 'float32',
+    'dU': 'object',
+    'e1': 'object',
+    'e2': 'object',
+    'class': 'object',
+    }
+output = output.astype(dtypes)
 
 # STEP 6: Save results
 results_file = results_file(RESULTS_DIR, site, batch, modelname, "output.pickle")
