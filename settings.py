@@ -1,0 +1,1 @@
+RESULTS_DIR = "/auto/users/hellerc/results/TBP-ms"
