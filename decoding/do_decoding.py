@@ -7,6 +7,7 @@ Dump dprime between stimulus pairs, calculated according to "model" options
 # STEP 1: Import modules and set up queue job
 import charlieTools.TBP_ms.loaders as loaders
 import charlieTools.TBP_ms.decoding as decoding
+import charlieTools.TBP_ms.plotting as plotting
 import pandas as pd
 from itertools import combinations
 import sys
@@ -46,12 +47,15 @@ def parse_mask_options(op):
             mask.append("CORRECT_REJECT_TRIAL")
         if mo=="m":
             mask.append("MISS_TRIAL")
+        if mo=="fa":
+            mask.append("FALSE_ALARM_TRIAL")
         if mo=="pa":
             mask.append("PASSIVE_EXPERIMENT")
     return mask
 
 mask = []
 drmask = []
+decmask = []
 method = "unknown"
 ndims = 2
 noise = "global"
@@ -60,6 +64,8 @@ for op in modelname.split("_"):
         mask = parse_mask_options(op)
     if op.startswith("drmask"):
         drmask = parse_mask_options(op)
+    if op.startswith("decmask"):
+        decmask = parse_mask_options(op)
     if op.startswith("DRops"):
         dim_reduction_options = op.split(".")
         for dro in dim_reduction_options:
@@ -74,19 +80,31 @@ for op in modelname.split("_"):
                     elif ddr_op == "targetNoise":
                         noise = "targets"
 
+if decmask == []:
+    # default is to compute decoding axis using the same data you're evaluating on
+    decmask = mask
+
 # STEP 3: Load data to be decoded / data to be use for decoding space definition
 X, Xp = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
-                                    mask=mask)
+                                    mask=mask,
+                                    recache=False)
 Xd, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
                                     mask=drmask)
+
+Xdec, _ = loaders.load_tbp_for_decoding(site=site, 
+                                    batch=batch,
+                                    wins = 0.1,
+                                    wine = 0.4,
+                                    collapse=True,
+                                    mask=decmask)
 
 # STEP 4: Generate list of stimulus pairs meeting min rep criteria and get the decoding space for each
 stim_pairs = list(combinations(X.keys(), 2))
@@ -95,14 +113,23 @@ decoding_space = decoding.get_decoding_space(Xd, stim_pairs,
                                             method=method, 
                                             noise_space=noise,
                                             ndims=ndims,
-                                            common_space=False) # TODO: common space special space (e.g. same space for all tar/cat pairs)
+                                            common_space=False)
+
+# STEP 4.1: Save a figure of projection of targets / catches a common decoding space for this site
+fig_file = results_file(RESULTS_DIR, site, batch, modelname, "ellipse_plot.png")
+plotting.dump_ellipse_plot(site, batch, filename=fig_file, mask=drmask)
 
 # STEP 5: Loop over stimulus pairs and perform decoding
 output = []
 for sp, axes in zip(stim_pairs, decoding_space):
+    # first, get decoding axis for this stim pair
+    _r1 = Xdec[sp[0]][:, :, 0]
+    _r2 = Xdec[sp[1]][:, :, 0]
+    _result = decoding.do_decoding(_r1, _r2, axes)
+    
     r1 = X[sp[0]][:, :, 0]
     r2 = X[sp[1]][:, :, 0]
-    result = decoding.do_decoding(r1, r2, axes)
+    result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
     pair_category = decoding.get_category(sp[0], sp[1])
 
     df = pd.DataFrame(index=["dp", "wopt", "evals", "evecs", "evecSim", "dU"],
