@@ -15,15 +15,15 @@ sys.path.append("/auto/users/hellerc/code/projects/TBP-ms/")
 from settings import RESULTS_DIR
 from path_helpers import results_file
 import os
-import nems
-import nems.db as nd
+import nems0
+import nems0.db as nd
 import logging
 
 log = logging.getLogger(__name__)
 
 if 'QUEUEID' in os.environ:
     queueid = os.environ['QUEUEID']
-    nems.utils.progress_fun = nd.update_job_tick
+    nems0.utils.progress_fun = nd.update_job_tick
 
 else:
     queueid = 0
@@ -92,23 +92,30 @@ X, Xp = loaders.load_tbp_for_decoding(site=site,
                                     collapse=True,
                                     mask=mask,
                                     recache=False)
+# TODO: Balance the trials that come out of this so that 
+# decoding space / axes are not biased towards active or passive 
+# (only needed if both exist in the mask)
 Xd, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
-                                    mask=drmask)
+                                    mask=drmask,
+                                    balance=True)
 
 Xdec, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
-                                    mask=decmask)
+                                    mask=decmask,
+                                    balance=True)
 
 # STEP 4: Generate list of stimulus pairs meeting min rep criteria and get the decoding space for each
 stim_pairs = list(combinations(X.keys(), 2))
 stim_pairs = [sp for sp in stim_pairs if (X[sp[0]].shape[1]>=5) & (X[sp[1]].shape[1]>=5)]
+# TODO: Add option to compute a single, fixed space for all pairs. e.g. a generic
+# target vs. catch space.
 decoding_space = decoding.get_decoding_space(Xd, stim_pairs, 
                                             method=method, 
                                             noise_space=noise,
@@ -123,6 +130,7 @@ plotting.dump_ellipse_plot(site, batch, filename=fig_file, mask=drmask)
 output = []
 for sp, axes in zip(stim_pairs, decoding_space):
     # first, get decoding axis for this stim pair
+    # TODO: Add specialty option for generic target vs. catch decoding space.
     _r1 = Xdec[sp[0]][:, :, 0]
     _r2 = Xdec[sp[1]][:, :, 0]
     _result = decoding.do_decoding(_r1, _r2, axes)

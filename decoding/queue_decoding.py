@@ -1,4 +1,4 @@
-import nems.db as nd
+import nems0.db as nd
 import numpy as np
 
 batch = 324
@@ -8,7 +8,6 @@ script = "/auto/users/hellerc/code/projects/TBP-ms/decoding/do_decoding.py"
 force_rerun = True
 
 # initial model list for testing
-# need to add options (e.g. choice of data for decoding axis calc.)
 modellist = [
     # decoding axis specific to state (active vs. passive)
     # 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise',

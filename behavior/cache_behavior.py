@@ -28,7 +28,7 @@ import datetime as dt
 results_path = "/auto/users/hellerc/results/TBP-ms/behavior"
 min_trials = 50
 runclass = "TBP"
-snr_strs = ['-inf', '-10', '-5', '0', 'inf'] # store results sorted by SNR
+snr_strs = ['-inf', '-10', '-5', '0', '5', 'inf'] # store results sorted by SNR
 options = {
             "resp": False, 
             "pupil": False, 
@@ -44,6 +44,9 @@ animals = [
     ("Cordyceps", "2020-08-05", "2020-09-24"),
     ("Jellybaby", "2021-03-10", "2021-05-29"),
     ("Clathrus", "2021-12-08", "2022-06-01")
+]
+animals = [
+    ("Clathrus", "2022-02-23", "2022-06-01")
 ]
 
 for an in animals:
@@ -78,7 +81,7 @@ for an in animals:
     DI = {k: [] for k in snr_strs if ('-inf' not in k)}
     nSessions = {k: 0 for k in snr_strs}
     bad_day = []
-    for idx, ud in enumerate(uDate):
+    for ud in uDate:
         print(f"Analyzing date: {ud}\n")
         parmfiles = d[d.date==ud].parmfile_path.values.tolist()
         # add catch to make sure "siteid" the same for all files
@@ -86,7 +89,12 @@ for an in animals:
         if np.any(np.array(sid) != sid[0]):
             bad_idx = (np.array(sid)!=sid[0])
             parmfiles = np.array(parmfiles)[~bad_idx].tolist()
-        manager = BAPHYExperiment(parmfiles)
+        
+        try:
+            manager = BAPHYExperiment(parmfiles)
+        except IndexError:
+            print(f"\n can't load {parmfiles}. Not flushed?")
+            continue 
 
         # make sure only loaded actives
         pf_mask = [True if k['BehaveObjectClass']=='RewardTargetLBHB' else False for k in manager.get_baphy_exptparams()]
