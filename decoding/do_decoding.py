@@ -59,6 +59,7 @@ decmask = []
 method = "unknown"
 ndims = 2
 noise = "global"
+sharedSpace = False
 for op in modelname.split("_"):
     if op.startswith("mask"):
         mask = parse_mask_options(op)
@@ -79,6 +80,8 @@ for op in modelname.split("_"):
                         noise = "global"
                     elif ddr_op == "targetNoise":
                         noise = "targets"
+                    elif ddr_op == "sharedSpace":
+                        sharedSpace = True
 
 if decmask == []:
     # default is to compute decoding axis using the same data you're evaluating on
@@ -92,9 +95,6 @@ X, Xp = loaders.load_tbp_for_decoding(site=site,
                                     collapse=True,
                                     mask=mask,
                                     recache=False)
-# TODO: Balance the trials that come out of this so that 
-# decoding space / axes are not biased towards active or passive 
-# (only needed if both exist in the mask)
 Xd, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
@@ -102,7 +102,6 @@ Xd, _ = loaders.load_tbp_for_decoding(site=site,
                                     collapse=True,
                                     mask=drmask,
                                     balance=True)
-
 Xdec, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
@@ -120,7 +119,7 @@ decoding_space = decoding.get_decoding_space(Xd, stim_pairs,
                                             method=method, 
                                             noise_space=noise,
                                             ndims=ndims,
-                                            common_space=False)
+                                            common_space=sharedSpace)
 
 # STEP 4.1: Save a figure of projection of targets / catches a common decoding space for this site
 fig_file = results_file(RESULTS_DIR, site, batch, modelname, "ellipse_plot.png")
@@ -151,6 +150,7 @@ for sp, axes in zip(stim_pairs, decoding_space):
     df["class"] = pair_category
     df["e1"] = sp[0]
     df["e2"] = sp[1]
+    df["dr_loadings"] = [axes]
 
     output.append(df)
 
@@ -165,6 +165,7 @@ dtypes = {
     'dU': 'object',
     'e1': 'object',
     'e2': 'object',
+    "dr_loadings": "object",
     'class': 'object',
     }
 output = output.astype(dtypes)

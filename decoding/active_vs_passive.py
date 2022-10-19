@@ -16,8 +16,12 @@ import scipy.stats as ss
 batch = 324
 sqrt = True
 sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
-amodel = 'tbpDecoding_mask.h.cr_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise'
-pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise'
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace'
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace'
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
+amodel = 'tbpDecoding_mask.h.cr.m_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
+pmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
 
 # as a "control" / "cross-validation", use results from dec. axis trained on opp. state
 # amodel = 'tbpDecoding_mask.h.cr.m_decmask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
