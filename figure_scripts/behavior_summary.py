@@ -1,5 +1,5 @@
 """
-Summary of behavior performance across all training (on real task)
+Summary of behavior performance across all training (on real task - with a catch)
 for each animal
 """
 import statistics

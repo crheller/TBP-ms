@@ -5,20 +5,11 @@ Save vector of RTs for each target / animal (concatenated across sessions)
 """
 import json
 import nems_lbhb.tin_helpers as thelp
-import pickle
-import statistics
 from nems_lbhb.baphy_experiment import BAPHYExperiment
 from nems_lbhb.behavior import get_reaction_times
-from nems_lbhb.behavior_plots import plot_RT_histogram
 import nems0.db as nd
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-mpl.rcParams['axes.spines.right'] = False
-mpl.rcParams['axes.spines.top'] = False
-mpl.rcParams['pdf.fonttype'] = 42
-mpl.rcParams['font.size'] = 6
 import datetime as dt
 
 # TODO - fix Clathrus / figure out why / how many are failing
