@@ -5,7 +5,8 @@ batch = 324
 sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 python_path = '/auto/users/hellerc/miniconda3/envs/lbhb/bin/python'
 script = "/auto/users/hellerc/code/projects/TBP-ms/decoding/do_decoding.py"
-force_rerun = True
+force_rerun = False
+FA_simulation = True
 
 # initial model list for testing
 modellist = [
@@ -33,6 +34,13 @@ modellist = [
     'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
     'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
 ]
+
+if FA_simulation:
+    m1 = [m+"_FA.1" for m in modellist]
+    m2 = [m+"_FA.2" for m in modellist]
+    m3 = [m+"_FA.3" for m in modellist]
+    m4 = [m+"_FA.4" for m in modellist]
+    modellist = m1 + m2 + m3 + m4
 
 bad_sites = [
     "ARM004e",

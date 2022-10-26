@@ -60,6 +60,8 @@ method = "unknown"
 ndims = 2
 noise = "global"
 sharedSpace = False
+factorAnalysis = False
+sim = None
 for op in modelname.split("_"):
     if op.startswith("mask"):
         mask = parse_mask_options(op)
@@ -82,6 +84,9 @@ for op in modelname.split("_"):
                         noise = "targets"
                     elif ddr_op == "sharedSpace":
                         sharedSpace = True
+    if op.startswith("FA"):
+        factorAnalysis = True
+        sim_method = int(op.split(".")[1])
 
 if decmask == []:
     # default is to compute decoding axis using the same data you're evaluating on
@@ -95,6 +100,27 @@ X, Xp = loaders.load_tbp_for_decoding(site=site,
                                     collapse=True,
                                     mask=mask,
                                     recache=False)
+
+# sim:
+#     0 = no change (null) model
+#     1 = change in gain only
+#     2 = change in indep only (fixing absolute covariance)
+#     3 = change in indep only (fixing relative covariance - so off-diagonals change)
+#     4 = change in everything (full FA simulation)
+#     # extras:
+#     5 = set off-diag to zero, only change single neuron var.
+#     6 = set off-diag to zero, fix single neuorn var
+#     7 = no change (and no correlations at all)
+if factorAnalysis:
+    # redefine X using simulated data
+    psth = {k: v.mean(axis=1).squeeze() for k, v in X.items()}
+    if "PASSIVE_EXPERIMENT" in mask:
+        state = "passive"
+    else:
+        state = "active"
+    X = loaders.load_FA_model(site, batch, psth, state, sim=sim_method, nreps=2000)
+
+# always define the space with the raw data, for the sake of comparison
 Xd, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
@@ -134,8 +160,8 @@ for sp, axes in zip(stim_pairs, decoding_space):
     _r2 = Xdec[sp[1]][:, :, 0]
     _result = decoding.do_decoding(_r1, _r2, axes)
     
-    r1 = X[sp[0]][:, :, 0]
-    r2 = X[sp[1]][:, :, 0]
+    r1 = X[sp[0]].squeeze()
+    r2 = X[sp[1]].squeeze()
     result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
     pair_category = decoding.get_category(sp[0], sp[1])
 
