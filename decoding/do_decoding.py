@@ -111,6 +111,7 @@ X, Xp = loaders.load_tbp_for_decoding(site=site,
 #     5 = set off-diag to zero, only change single neuron var.
 #     6 = set off-diag to zero, fix single neuorn var
 #     7 = no change (and no correlations at all)
+Xog = X.copy()
 if factorAnalysis:
     # redefine X using simulated data
     psth = {k: v.mean(axis=1).squeeze() for k, v in X.items()}
@@ -137,8 +138,8 @@ Xdec, _ = loaders.load_tbp_for_decoding(site=site,
                                     balance=True)
 
 # STEP 4: Generate list of stimulus pairs meeting min rep criteria and get the decoding space for each
-stim_pairs = list(combinations(X.keys(), 2))
-stim_pairs = [sp for sp in stim_pairs if (X[sp[0]].shape[1]>=5) & (X[sp[1]].shape[1]>=5)]
+stim_pairs = list(combinations(Xog.keys(), 2))
+stim_pairs = [sp for sp in stim_pairs if (Xog[sp[0]].shape[1]>=5) & (Xog[sp[1]].shape[1]>=5)]
 # TODO: Add option to compute a single, fixed space for all pairs. e.g. a generic
 # target vs. catch space.
 decoding_space = decoding.get_decoding_space(Xd, stim_pairs, 
@@ -146,6 +147,9 @@ decoding_space = decoding.get_decoding_space(Xd, stim_pairs,
                                             noise_space=noise,
                                             ndims=ndims,
                                             common_space=sharedSpace)
+
+if len(decoding_space) != len(stim_pairs):
+    raise ValueError
 
 # STEP 4.1: Save a figure of projection of targets / catches a common decoding space for this site
 fig_file = results_file(RESULTS_DIR, site, batch, modelname, "ellipse_plot.png")

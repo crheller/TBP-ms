@@ -13,6 +13,9 @@ modellist = [
     ## decoding axis specific to state (active vs. passive). This is default
     'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise',
     'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise',
+    # no misses
+    'tbpDecoding_mask.h.cr_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise',
+    'tbpDecoding_mask.pa_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise',
 
     ## use only active mask for getting decoding axis
     # 'tbpDecoding_mask.h.cr.m_decmask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise',
@@ -25,14 +28,23 @@ modellist = [
     ## use all data for getting decoding axis
     'tbpDecoding_mask.h.cr.m_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise',
     'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise',
+    # no misses
+    'tbpDecoding_mask.h.cr_decmask.h.cr.pa_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise',
+    'tbpDecoding_mask.pa_decmask.h.cr.pa_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise',
 
     ## use all data for getting decoding axis, shared decoding space across stim pairs
     'tbpDecoding_mask.h.cr.m_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
     'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
+    # no misses
+    'tbpDecoding_mask.h.cr_decmask.h.cr.pa_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
+    'tbpDecoding_mask.pa_decmask.h.cr.pa_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
 
     ## use state specific decoding axis, shared decoding space across stim pairs
     'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
     'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
+    # no misses
+    'tbpDecoding_mask.h.cr_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
+    'tbpDecoding_mask.pa_drmask.h.cr.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
 ]
 
 if FA_simulation:

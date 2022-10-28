@@ -1,8 +1,10 @@
 import nems0.db as nd
+import sys
+sys.path.append("/auto/users/hellerc/code/projects/TBP-ms/")
 from settings import BAD_SITES
 
 batches = [324]
-modelnames = ["FA"]
+modelnames = ["FA_perstim"]
 force_rerun = False
 
 for batch in batches:

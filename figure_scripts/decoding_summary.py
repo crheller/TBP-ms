@@ -26,8 +26,8 @@ sqrt = True
 sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 
 # load decoding results
-amodel = 'tbpDecoding_mask.h.cr.m_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
-pmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
 fmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace'
 sites = [s for s in sites if s not in BAD_SITES]
 active = []
@@ -188,11 +188,11 @@ f.tight_layout()
 
 ## Delta dprime strip plot
 s = 10
-delta_metric = "delta_raw"
+delta_metric = "delta"
 f, ax = plt.subplots(1, 2, figsize=(3, 3))
 
 # A1
-xx = np.random.normal(0, 0.1, len(df[df.area=="A1"].site.unique()))
+xx = np.random.normal(0, 0.03, len(df[(df.area=="A1") & (df["class"]=="tar_cat")].site.unique()))
 ax[0].scatter(
     xx,
     df[(df["class"]=="tar_tar") & (df.area=="A1")].groupby(by=["site", "area"]).mean()[delta_metric],
@@ -212,9 +212,15 @@ u = df[(df["class"]=="tar_cat") & (df.area=="A1")].groupby(by=["site", "area"]).
 yerr = df[(df["class"]=="tar_cat") & (df.area=="A1")].groupby(by=["site", "area"]).mean()[delta_metric].std() / np.sqrt(len(xx))
 ax[0].errorbar(1, u, yerr=yerr, marker="o", 
             capsize=2, lw=1, markerfacecolor="grey", markeredgecolor="k", color="k") 
+
+for site in df[df.area=="A1"].site.unique():
+    x1 = df[(df.site==site) & (df["class"]=="tar_tar")][delta_metric].mean()
+    x2 = df[(df.site==site) & (df["class"]=="tar_cat")][delta_metric].mean()
+    ax[0].plot([0.2, 0.8], [x1, x2], color="k", lw=0.5)
+
 ax[0].set_title("A1")
 # PEG
-xx = np.random.normal(0, 0.1, len(df[df.area=="PEG"].site.unique()))
+xx = np.random.normal(0, 0.03, len(df[(df.area=="PEG") & (df["class"]=="tar_tar")].site.unique()))
 ax[1].scatter(
     xx,
     df[(df["class"]=="tar_tar") & (df.area=="PEG")].groupby(by=["site", "area"]).mean()[delta_metric],
@@ -224,7 +230,7 @@ u = df[(df["class"]=="tar_tar") & (df.area=="PEG")].groupby(by=["site", "area"])
 yerr = df[(df["class"]=="tar_tar") & (df.area=="PEG")].groupby(by=["site", "area"]).mean()[delta_metric].std() / np.sqrt(len(xx))
 ax[1].errorbar(0, u, yerr=yerr, marker="o", 
             capsize=2, lw=1, markerfacecolor="r", markeredgecolor="k", color="k")     
-xx += 1
+xx = np.random.normal(1, 0.03, len(df[(df.area=="PEG") & (df["class"]=="tar_cat")].site.unique()))
 ax[1].scatter(
     xx,
     df[(df["class"]=="tar_cat") & (df.area=="PEG")].groupby(by=["site", "area"]).mean()[delta_metric],
@@ -234,6 +240,12 @@ u = df[(df["class"]=="tar_cat") & (df.area=="PEG")].groupby(by=["site", "area"])
 yerr = df[(df["class"]=="tar_cat") & (df.area=="PEG")].groupby(by=["site", "area"]).mean()[delta_metric].std() / np.sqrt(len(xx))
 ax[1].errorbar(1, u, yerr=yerr, marker="o", 
             capsize=2, lw=1, markerfacecolor="grey", markeredgecolor="k", color="k")    
+    
+for site in df[df.area=="PEG"].site.unique():
+    x1 = df[(df.site==site) & (df["class"]=="tar_tar")][delta_metric].mean()
+    x2 = df[(df.site==site) & (df["class"]=="tar_cat")][delta_metric].mean()
+    ax[1].plot([0.2, 0.8], [x1, x2], color="k", lw=0.5)
+
 ax[1].set_title("PEG")
 
 for a in ax:
