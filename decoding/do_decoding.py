@@ -61,6 +61,7 @@ ndims = 2
 noise = "global"
 sharedSpace = False
 factorAnalysis = False
+fa_perstim = False
 sim = None
 for op in modelname.split("_"):
     if op.startswith("mask"):
@@ -87,6 +88,7 @@ for op in modelname.split("_"):
     if op.startswith("FA"):
         factorAnalysis = True
         sim_method = int(op.split(".")[1])
+        fa_perstim = op.split(".")[0][2:]=="perstim"
 
 if decmask == []:
     # default is to compute decoding axis using the same data you're evaluating on
@@ -114,12 +116,21 @@ X, Xp = loaders.load_tbp_for_decoding(site=site,
 Xog = X.copy()
 if factorAnalysis:
     # redefine X using simulated data
-    psth = {k: v.mean(axis=1).squeeze() for k, v in X.items()}
     if "PASSIVE_EXPERIMENT" in mask:
         state = "passive"
     else:
         state = "active"
-    X = loaders.load_FA_model(site, batch, psth, state, sim=sim_method, nreps=2000)
+    if fa_perstim:
+        keep = [k for k in Xog.keys() if ("TAR_" in k) | ("CAT_" in k)]
+        Xog = {k: v for k, v in Xog.items() if k in keep}
+        psth = {k: v.mean(axis=1).squeeze() for k, v in Xog.items()}
+        log.info("Loading FA simulation using per stimulus results")
+        X = loaders.load_FA_model_perstim(site, batch, psth, state, sim=sim_method, nreps=2000)
+        Xog = {k: v for k, v in Xog.items() if k in X.keys()}
+    else:
+        log.info("Loading FA simulation")
+        psth = {k: v.mean(axis=1).squeeze() for k, v in X.items()}
+        X = loaders.load_FA_model(site, batch, psth, state, sim=sim_method, nreps=2000)
 
 # always define the space with the raw data, for the sake of comparison
 Xd, _ = loaders.load_tbp_for_decoding(site=site, 

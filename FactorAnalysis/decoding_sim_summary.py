@@ -25,7 +25,10 @@ sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 # load decoding results
 amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
 pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
-fa_models = ["raw", "FA.1", "FA.3", "FA.4"]
+fa1 = "FAperstim.1"
+fa2 = "FAperstim.3"
+fa3 = "FAperstim.4"
+fa_models = ["raw", fa1, fa2, fa3]
 sites = [s for s in sites if s not in BAD_SITES]
 active = []
 passive = []
@@ -59,8 +62,8 @@ for site in sites:
 active = pd.concat(active)
 passive = pd.concat(passive)
 df = passive.merge(active, on=["site", "class", "e1", "e2", "area", "sim"])
-df_drop = df[["dp_x", "dp_y", "e1", "e2", "site"]].drop_duplicates()
-df = df.loc[df_drop.index]
+# df_drop = df[["dp_x", "dp_y", "e1", "e2", "site"]].drop_duplicates()
+# df = df.loc[df_drop.index]
 df["delta"] = (df["dp_y"] - df["dp_x"]) / (df["dp_y"] + df["dp_x"])
 df["delta_raw"] = df["dp_y"] - df["dp_x"]
 
@@ -72,36 +75,36 @@ f, ax = plt.subplots(1, 3, figsize=(9, 3))
 
 ax[0].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
-    df[(df.sim=="FA.1") & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
+    df[(df.sim==fa1) & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
     s=s, alpha=alpha
 )
 ax[0].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
-    df[(df.sim=="FA.1") & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
+    df[(df.sim==fa1) & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
     s=s, alpha=alpha
 )
 ax[0].set_title("Gain only")
 
 ax[1].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
-    df[(df.sim=="FA.3") & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
+    df[(df.sim==fa2) & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
     s=s, alpha=alpha
 )
 ax[1].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
-    df[(df.sim=="FA.3") & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
+    df[(df.sim==fa2) & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
     s=s, alpha=alpha
 )
 ax[1].set_title("Indep. noise")
 
 ax[2].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
-    df[(df.sim=="FA.4") & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
+    df[(df.sim==fa3) & (df["class"]=="tar_cat") & (df["area"]=="A1")][delta_metric],
     s=s, alpha=alpha
 )
 ax[2].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
-    df[(df.sim=="FA.4") & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
+    df[(df.sim==fa3) & (df["class"]=="tar_tar") & (df["area"]=="A1")][delta_metric],
     s=s, alpha=alpha
 )
 ax[2].set_title("Full model")
@@ -119,36 +122,36 @@ f, ax = plt.subplots(1, 3, figsize=(9, 3))
 
 ax[0].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
-    df[(df.sim=="FA.1") & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
+    df[(df.sim==fa1) & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
     s=s, alpha=alpha
 )
 ax[0].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
-    df[(df.sim=="FA.1") & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
+    df[(df.sim==fa1) & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
     s=s, alpha=alpha
 )
 ax[0].set_title("Gain only")
 
 ax[1].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
-    df[(df.sim=="FA.3") & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
+    df[(df.sim==fa2) & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
     s=s, alpha=alpha
 )
 ax[1].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
-    df[(df.sim=="FA.3") & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
+    df[(df.sim==fa2) & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
     s=s, alpha=alpha
 )
 ax[1].set_title("Indep. noise")
 
 ax[2].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
-    df[(df.sim=="FA.4") & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
+    df[(df.sim==fa3) & (df["class"]=="tar_cat") & (df["area"]=="PEG")][delta_metric],
     s=s, alpha=alpha
 )
 ax[2].scatter(
     df[(df.sim=="raw") & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
-    df[(df.sim=="FA.4") & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
+    df[(df.sim==fa3) & (df["class"]=="tar_tar") & (df["area"]=="PEG")][delta_metric],
     s=s, alpha=alpha
 )
 ax[2].set_title("Full model")
@@ -169,9 +172,9 @@ tt = df[df["class"]=="tar_tar"].groupby(by=["site", "area", "sim"]).mean()
 selectivity = tc[delta_metric] - tt[delta_metric]
 peg_mask = selectivity.index.get_level_values(1)=="PEG"
 a1_mask = selectivity.index.get_level_values(1)=="A1"
-s1_mask = selectivity.index.get_level_values(2)=="FA.1"
-s2_mask = selectivity.index.get_level_values(2)=="FA.3"
-s3_mask = selectivity.index.get_level_values(2)=="FA.4"
+s1_mask = selectivity.index.get_level_values(2)==fa1
+s2_mask = selectivity.index.get_level_values(2)==fa2
+s3_mask = selectivity.index.get_level_values(2)==fa3
 r_mask = selectivity.index.get_level_values(2)=="raw"
 
 f, ax = plt.subplots(1, 3, figsize=(9, 3))

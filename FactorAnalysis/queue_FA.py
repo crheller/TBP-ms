@@ -5,7 +5,7 @@ from settings import BAD_SITES
 
 batches = [324]
 modelnames = ["FA_perstim"]
-force_rerun = False
+force_rerun = True
 
 for batch in batches:
 
@@ -21,4 +21,4 @@ for batch in batches:
                     script_path=script,
                     user='hellerc',
                     force_rerun=force_rerun,
-                    reserve_gb=2)
+                    reserve_gb=2, priority=2)

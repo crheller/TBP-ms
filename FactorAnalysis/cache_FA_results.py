@@ -304,11 +304,11 @@ else:
         a_dim95[st] = get_dim95(fa_active)
 
         results["active"][kk] = {}
-        results["active"][kk]["sv"] = a_sv
-        results["active"][kk]["loading_sim"] = a_loading_sim
-        results["active"][kk]["dim"] = a_dim95
+        results["active"][kk]["sv"] = a_sv[st]
+        results["active"][kk]["loading_sim"] = a_loading_sim[st]
+        results["active"][kk]["dim"] = a_dim95[st]
         results["active"][kk]["components_"] = fa_active.components_
-        results["active"][kk]["sigma_shared"] = sigma_shared(fa_active),
+        results["active"][kk]["sigma_shared"] = sigma_shared(fa_active)
         results["active"][kk]["sigma_ind"] = sigma_ind(fa_active)
         results["active"][kk]["sigma_full"] = pred_cov(fa_active)
 
@@ -328,11 +328,11 @@ else:
         p_dim95[st] = get_dim95(fa_passive)
 
         results["passive"][kk] = {}
-        results["passive"][kk]["sv"] = p_sv
-        results["passive"][kk]["loading_sim"] = p_loading_sim
-        results["passive"][kk]["dim"] = p_dim95
+        results["passive"][kk]["sv"] = p_sv[st]
+        results["passive"][kk]["loading_sim"] = p_loading_sim[st]
+        results["passive"][kk]["dim"] = p_dim95[st]
         results["passive"][kk]["components_"] = fa_passive.components_
-        results["passive"][kk]["sigma_shared"] = sigma_shared(fa_passive),
+        results["passive"][kk]["sigma_shared"] = sigma_shared(fa_passive)
         results["passive"][kk]["sigma_ind"] = sigma_ind(fa_passive)
         results["passive"][kk]["sigma_full"] = pred_cov(fa_passive)
 
