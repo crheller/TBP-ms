@@ -150,7 +150,7 @@ Xdec, _ = loaders.load_tbp_for_decoding(site=site,
 
 # STEP 4: Generate list of stimulus pairs meeting min rep criteria and get the decoding space for each
 stim_pairs = list(combinations(Xog.keys(), 2))
-stim_pairs = [sp for sp in stim_pairs if (Xog[sp[0]].shape[1]>=5) & (Xog[sp[1]].shape[1]>=5)]
+stim_pairs = [sp for sp in stim_pairs if (Xog[sp[0]].shape[1]>=5) & (Xog[sp[1]].shape[1]>=5) & (Xd[sp[0]].shape[1]>=5) & (Xd[sp[1]].shape[1]>=5)]
 # TODO: Add option to compute a single, fixed space for all pairs. e.g. a generic
 # target vs. catch space.
 decoding_space = decoding.get_decoding_space(Xd, stim_pairs, 
