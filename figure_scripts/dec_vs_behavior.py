@@ -25,8 +25,11 @@ sites = [s for s in nd.get_batch_sites(batch)[0] if s not in BAD_SITES]
 
 
 # load neural dprime
-amodel = 'tbpDecoding_mask.h.cr.m_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_FAperstim.4'
-pmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_FAperstim.4'
+fa = "_FAperstim.1"
+amodel = 'tbpDecoding_mask.h.cr.m_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+fa
+pmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+fa
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+fa
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+fa
 active = []
 passive = []
 for site in sites:
@@ -50,8 +53,6 @@ for site in sites:
 active = pd.concat(active)
 passive = pd.concat(passive)
 df = passive.merge(active, on=["site", "class", "e1", "e2", "area"])
-df_drop = df[["dp_x", "dp_y", "e1", "e2", "site"]].drop_duplicates()
-df = df.loc[df_drop.index]
 df["delta"] = (df["dp_y"] - df["dp_x"]) / (df["dp_y"] + df["dp_x"])
 df["delta_raw"] = df["dp_y"] - df["dp_x"]
 
@@ -70,17 +71,20 @@ ng_a1.index = ng_a1.index.set_levels(ng_a1.index.levels[1].str.strip("TAR_"), le
 peg_merge = ng_peg.merge(bg, right_index=True, left_index=True)
 a1_merge = ng_a1.merge(bg, right_index=True, left_index=True)
 
+delta_metric = "delta_raw"
 # delta dprime
 f, ax = plt.subplots(1, 2, figsize=(8, 4))
 
-r, p = ss.pearsonr(a1_merge["dprime"], a1_merge["delta_raw"])
+r, p = ss.pearsonr(a1_merge["dprime"], a1_merge[delta_metric])
 leg = f"r={round(r, 3)}, p={round(p, 3)}"
-ax[0].scatter(a1_merge["dprime"], a1_merge["delta_raw"], 
+ax[0].scatter(a1_merge["dprime"], a1_merge[delta_metric], 
                 s=25, c="k")
 ax[0].set_title(f"A1, {leg}")
-r, p = ss.pearsonr(peg_merge["dprime"], peg_merge["delta_raw"])
+
+# mm = peg_merge[delta_metric] > -2
+r, p = ss.pearsonr(peg_merge["dprime"], peg_merge[delta_metric])
 leg = f"r={round(r, 3)}, p={round(p, 3)}"
-ax[1].scatter(peg_merge["dprime"], peg_merge["delta_raw"], 
+ax[1].scatter(peg_merge["dprime"], peg_merge[delta_metric], 
                 s=25, c="k")
 ax[1].set_title(f"PEG, {leg}")
 for a in ax:

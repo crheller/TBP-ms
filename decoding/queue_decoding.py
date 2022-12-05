@@ -5,10 +5,10 @@ batch = 324
 sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 python_path = '/auto/users/hellerc/miniconda3/envs/lbhb/bin/python'
 script = "/auto/users/hellerc/code/projects/TBP-ms/decoding/do_decoding.py"
-force_rerun = False
+force_rerun = True
 FA_simulation = False
 
-ndim = 4
+ndim = 2
 # initial model list for testing
 modellist = [
     ## decoding axis specific to state (active vs. passive). This is default

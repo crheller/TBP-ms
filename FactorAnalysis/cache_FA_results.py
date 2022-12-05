@@ -50,10 +50,11 @@ for op in modelname.split("_"):
 
 # measure change in dimensionality, %sv, loading sim, across jackknifes
 def get_dim(LL):
-    try:
+    if 0:
         return argrelextrema(LL, np.greater)[0][0]+1
-    except:
-        log.info("No relative LL max, choosing overall maximum")
+    else:
+        # log.info("No relative LL max, choosing overall maximum")
+        log.info("Using simple argmax")
         return np.argmax(LL)+1
 
 def sigma_shared(model):
@@ -71,6 +72,7 @@ def get_dim95(model):
     """
     ss = sigma_shared(model)
     evals, _ = np.linalg.eig(ss)
+    evals = evals[np.argsort(evals)[::-1]]
     evals = evals / sum(evals)
     return np.argwhere(np.cumsum(evals)>=0.95)[0][0]+1
 
@@ -270,19 +272,20 @@ else:
     log.info("\nComputing log-likelihood across models / stimuli")
     LL_active = np.zeros((nComponents, nstim))
     LL_passive = np.zeros((nComponents, nstim))
+    rand_jacks = 10
     for ii in np.arange(1, LL_active.shape[0]+1):
         log.info(f"{ii} / {LL_active.shape[0]}")
         fa = FactorAnalysis(n_components=ii, random_state=0) # init model
         for st, kk in enumerate(keep):
             # ACTIVE FACTOR ANALYSIS
-            fa.fit(X_asub[kk].squeeze().T) # fit model
+            fa.fit(X_asub[kk].squeeze().T[::2, :]) # fit model
             # Get LL score
-            LL_active[ii-1, st] = fa.score(X_asub[kk].squeeze().T)
+            LL_active[ii-1, st] = np.mean(fa.score(X_asub[kk].squeeze().T[1::2, :]))
 
             # PASSIVE FACTOR ANALYSIS
-            fa.fit(X_psub[kk].squeeze().T) # fit model
+            fa.fit(X_psub[kk].squeeze().T[::2, :]) # fit model
             # Get LL score
-            LL_passive[ii-1, st] = fa.score(X_psub[kk].squeeze().T)
+            LL_passive[ii-1, st] = fa.score(X_psub[kk].squeeze().T[1::2, :])
 
     log.info("Estimating %sv and loading similarity for the 'best' model in each state")
 

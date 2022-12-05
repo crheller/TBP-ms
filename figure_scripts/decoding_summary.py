@@ -29,6 +29,8 @@ sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 # load decoding results
 amodel = 'tbpDecoding_mask.h.cr.m_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace'
 pmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace'
+# amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim3.ddr-targetNoise'
+# pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim3.ddr-targetNoise'
 fmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace'
 sites = [s for s in sites if s not in BAD_SITES]
 active = []
