@@ -11,14 +11,17 @@ sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib as mpl
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 mpl.rcParams['font.size'] = 8
+mpl.rcParams['xtick.labelsize'] = 8 
+mpl.rcParams['ytick.labelsize'] = 8 
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/temp/"
+figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig2/"
 
-site = "CRD018d"
-# site = "CRD010b"
+# site = "CRD018d"
+site = "CRD010b"
 batch = 324
 fs = 50
 amask = ["HIT_TRIAL", "CORRECT_REJECT_TRIAL"]
@@ -64,13 +67,13 @@ vmin = -5
 vmax = 5
 cmap = "PuOr_r"
 sidx = np.argsort(at_psth.argmax(axis=1))
-f, ax = plt.subplots(2, 3, figsize=(7, 6))
+f, ax = plt.subplots(2, 3, figsize=(4, 2.5))
 
-ax[0, 0].set_title("Active, Target")
+# ax[0, 0].set_title("Active, Target")
 ii=ax[0, 0].imshow(at_psth[sidx, :], cmap=cmap, vmin=vmin, vmax=vmax,
         aspect="auto", extent=[-0.1, 0.4, 0, at_psth.shape[0]])
 f.colorbar(ii, ax=ax[0, 0])
-ax[0, 1].set_title("Active, Catch")
+# ax[0, 1].set_title("Active, Catch")
 ii=ax[0, 1].imshow(ac_psth[sidx, :], cmap=cmap, vmin=vmin, vmax=vmax,
         aspect="auto", extent=[-0.1, 0.4, 0, at_psth.shape[0]])
 f.colorbar(ii, ax=ax[0, 1])
@@ -78,11 +81,11 @@ ii=ax[0, 2].imshow(at_psth[sidx, :] - ac_psth[sidx, :], cmap="bwr", vmin=-vmax, 
         aspect="auto", extent=[-0.1, 0.4, 0, at_psth.shape[0]])
 f.colorbar(ii, ax=ax[0, 2])
 
-ax[1, 0].set_title("Pasive, Target")
+# ax[1, 0].set_title("Pasive, Target")
 ii=ax[1, 0].imshow(pt_psth[sidx, :], cmap=cmap, vmin=vmin, vmax=vmax,
         aspect="auto", extent=[-0.1, 0.4, 0, at_psth.shape[0]])
 f.colorbar(ii, ax=ax[1, 0])
-ax[1, 1].set_title("Passive, Catch")
+# ax[1, 1].set_title("Passive, Catch")
 ii=ax[1, 1].imshow(pc_psth[sidx, :], cmap=cmap, vmin=vmin, vmax=vmax,
         aspect="auto", extent=[-0.1, 0.4, 0, at_psth.shape[0]])
 f.colorbar(ii, ax=ax[1, 1])
@@ -99,7 +102,9 @@ for i in range(2):
 
         ax[i, j].axvline(0.0, linestyle="--", color=c)
         ax[i, j].axvline(0.3, linestyle="--", color=c)
-        ax[i, j].set_xlabel("Time (s)")
+        ax[i, j].set_yticks([])
+        ax[i, j].set_xticks([])
+        # ax[i, j].set_xlabel("Time (s)")
 
 f.tight_layout()
 
