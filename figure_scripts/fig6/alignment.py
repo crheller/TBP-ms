@@ -1,3 +1,7 @@
+"""
+Compare first FA loading to the delta mu axis
+for each target (vs. catch)
+"""
 import nems0.db as nd
 
 import sys
