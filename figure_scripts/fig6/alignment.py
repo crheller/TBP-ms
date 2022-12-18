@@ -19,6 +19,10 @@ import matplotlib as mpl
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 mpl.rcParams['font.size'] = 8
+mpl.rcParams['xtick.labelsize'] = 8
+mpl.rcParams['ytick.labelsize'] = 8 
+
+figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig6/"
 
 batch = 324
 sqrt = True
@@ -29,8 +33,8 @@ pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
 sites = [s for s in sites if s not in BAD_SITES]
 rra = 0
 rrp = 0
-dfa = pd.DataFrame(columns=["acos_sim", "e1", "e2", "area", "site"])
-dfp = pd.DataFrame(columns=["pcos_sim", "e1", "e2", "area", "site"])
+dfa = pd.DataFrame(columns=["acos_sim", "e2", "e1", "area", "site"])
+dfp = pd.DataFrame(columns=["pcos_sim", "e2", "e1", "area", "site"])
 for site in sites:
     d = pd.read_pickle(os.path.join(RESULTS_DIR, "factor_analysis", str(batch), site, "FA_perstim.pickle"))
     area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",)).iloc[0][0]
@@ -63,17 +67,34 @@ for site in sites:
 df = dfa.merge(dfp, on=["e1", "e2", "area", "site"])
 
 
-f, ax = plt.subplots(1, 2, figsize=(4, 4), sharey=True)
+f, ax = plt.subplots(1, 2, figsize=(2, 2), sharey=True)
 
 for i, a in enumerate(["A1", "PEG"]):
-    y = df[df.area==a]["acos_sim"]
-    ax[i].errorbar(0, y.mean(), yerr=y.std()/np.sqrt(len(y)), marker="o",
-            capsize=2, markeredgecolor="k", label="active") 
     y = y = df[df.area==a]["pcos_sim"]
-    ax[i].errorbar(1, y.mean(), yerr=y.std()/np.sqrt(len(y)), marker="o",
+    ax[i].errorbar(0, y.mean(), yerr=y.std()/np.sqrt(len(y)), marker="o",
             capsize=2, markeredgecolor="k", label="passive") 
-    ax[i].set_title(a)
+    y = df[df.area==a]["acos_sim"]
+    ax[i].errorbar(1, y.mean(), yerr=y.std()/np.sqrt(len(y)), marker="o",
+            capsize=2, markeredgecolor="k", label="active") 
+    # ax[i].set_title(a)
     ax[i].set_xticks([])
-ax[0].set_ylabel("Cos. similarity (dU vs. FA1)")
-ax[0].legend(frameon=False)
+    ax[i].set_xlim((-0.25, 1.25))
+# ax[0].set_ylabel("Cos. similarity (dU vs. FA1)")
+# ax[0].legend(frameon=False)
 f.tight_layout()
+
+f.savefig(os.path.join(figpath, "alignment_errorbar.svg"), dpi=500)
+
+
+# relationship between behavior and the change in alignement
+beh_df = pd.read_pickle(os.path.join(RESULTS_DIR, "behavior_recordings", "all_trials.pickle"))
+# Plot relationship between behavior and neural dprime
+bg = beh_df.groupby(by=["site", "e1"]).mean()
+bg = bg.reset_index()
+bg["e1"] = ["TAR_"+e for e in bg["e1"]]
+
+merge = df.merge(bg, on=["e1","site"])
+
+mask = merge.area=="A1"
+delta = merge[mask]["pcos_sim"] - merge[mask]["acos_sim"]
+plt.scatter(merge[mask]["dprime"], delta)
