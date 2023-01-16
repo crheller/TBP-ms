@@ -67,10 +67,11 @@ dd = pd.read_pickle(results_file(RESULTS_DIR, a1_site, batch, fmodel, "output.pi
 a1_loading = dd["dr_loadings"].iloc[0]
 dd = pd.read_pickle(results_file(RESULTS_DIR, peg_site, batch, fmodel, "output.pickle"))
 peg_loading = dd["dr_loadings"].iloc[0]
+peg_loading[1, :] = -1 * peg_loading[1, :]
 
 ## Plot ellipse plots
 s = 10
-f, ax = plt.subplots(2, 2, figsize=(4, 4))
+f, ax = plt.subplots(2, 2, figsize=(4.2, 4))
 
 # A1
 catch = [c for c in a1a.keys() if "CAT_" in c]
@@ -110,11 +111,11 @@ ymm = np.percentile(ax[1, 1].get_ylim()+ax[1, 0].get_ylim(), [0, 100])
 ax[1, 0].set_xlim(xmm); ax[1, 1].set_xlim(xmm)
 ax[1, 0].set_ylim(ymm); ax[1, 1].set_ylim(ymm)
 
-for a in ax.flatten():
-    a.set_xlabel(r"$\Delta \mu$")
-    a.set_ylabel(r"$\sigma$")
-    a.set_xticks([])
-    a.set_yticks([])
+# for a in ax.flatten():
+#     a.set_xlabel(r"$\Delta \mu$")
+#     a.set_ylabel(r"$\sigma$")
+#     a.set_xticks([])
+#     a.set_yticks([])
 
 f.patch.set_facecolor("white")
 f.tight_layout()
