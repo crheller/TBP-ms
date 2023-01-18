@@ -55,7 +55,6 @@ ac_psth = sf.gaussian_filter1d(acresp.mean(axis=0)[:, :int(0.5 * fs)], sigma, ax
 pc_psth = sf.gaussian_filter1d(pcresp.mean(axis=0)[:, :int(0.5 * fs)], sigma, axis=1)
 
 # normalize according to all the data
-m = np.concatenate((at_psth[:, :int(0.1*fs)], pt_psth[:, :int(0.1*fs)], ac_psth[:, :int(0.1*fs)], pc_psth[:, :int(0.1*fs)]), axis=1).mean(axis=1)
 sd = np.concatenate((at_psth, pt_psth, ac_psth, pc_psth), axis=1).std(axis=1)
 sd[sd==0] = 1
 at_psth = ((at_psth.T - at_psth[:, :int(0.1*fs)].mean(axis=1)) / sd).T
