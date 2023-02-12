@@ -114,6 +114,7 @@ f.tight_layout()
 f.savefig(os.path.join(figpath, "delta_vs_behavior.svg"), dpi=500)
 
 # quantify significance of correlation using bootstrapping
+np.random.seed(123)
 nboots = 1000
 x = a1_merge["dprime"]
 rb_a1 = []
@@ -125,6 +126,26 @@ rb_peg = []
 for bb in range(nboots):
     ii = np.random.choice(np.arange(0, len(x)), len(x), replace=True)
     rb_peg.append(np.corrcoef(x[ii], peg_merge[delta_metric][ii])[0, 1])
+
+# compute bootstrapped p-values
+np.random.seed(123)
+nboots = 1000
+x = a1_merge["dprime"]
+rb_a1_null = []
+for bb in range(nboots):
+    ii = np.random.choice(np.arange(0, len(x)), len(x), replace=True)
+    jj = np.random.choice(np.arange(0, len(x)), len(x), replace=True)
+    rb_a1_null.append(np.corrcoef(x[ii], a1_merge[delta_metric][jj])[0, 1])
+x = peg_merge["dprime"]
+rb_peg_null = []
+for bb in range(nboots):
+    ii = np.random.choice(np.arange(0, len(x)), len(x), replace=True)
+    jj = np.random.choice(np.arange(0, len(x)), len(x), replace=True)
+    rb_peg_null.append(np.corrcoef(x[ii], peg_merge[delta_metric][jj])[0, 1])
+a1_pval = np.mean(np.array(rb_a1_null) > np.corrcoef(a1_merge["dprime"], a1_merge[delta_metric])[0, 1])
+peg_pval = np.mean(np.array(rb_peg_null) > np.corrcoef(peg_merge["dprime"], peg_merge[delta_metric])[0, 1])
+print(f"A1 pval: {a1_pval}")
+print(f"PEG pval: {peg_pval}")
 
 f, ax = plt.subplots(1, 1, figsize=(1, 2))
 
