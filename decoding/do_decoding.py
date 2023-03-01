@@ -68,6 +68,7 @@ factorAnalysis = False
 fa_perstim = False
 sim = None
 pup_match_active = False
+regress_pupil = False
 for op in modelname.split("_"):
     if op.startswith("mask"):
         mask, pup_match_active = parse_mask_options(op)
@@ -90,6 +91,8 @@ for op in modelname.split("_"):
                         noise = "targets"
                     elif ddr_op == "sharedSpace":
                         sharedSpace = True
+    if op.startswith("PR"):
+        regress_pupil = True
     if op.startswith("FA"):
         factorAnalysis = True
         sim_method = int(op.split(".")[1])
@@ -107,7 +110,8 @@ X, Xp = loaders.load_tbp_for_decoding(site=site,
                                     collapse=True,
                                     mask=mask,
                                     recache=False,
-                                    pupexclude=pup_match_active)
+                                    pupexclude=pup_match_active,
+                                    regresspupil=regress_pupil)
 
 # sim:
 #     0 = no change (null) model
@@ -145,14 +149,16 @@ Xd, _ = loaders.load_tbp_for_decoding(site=site,
                                     wine = 0.4,
                                     collapse=True,
                                     mask=drmask,
-                                    balance=True)
+                                    balance=True,
+                                    regresspupil=regress_pupil)
 Xdec, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
                                     mask=decmask,
-                                    balance=True)
+                                    balance=True,
+                                    regresspupil=regress_pupil)
 
 # STEP 4: Generate list of stimulus pairs meeting min rep criteria and get the decoding space for each
 stim_pairs = list(combinations(Xog.keys(), 2))

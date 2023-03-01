@@ -7,6 +7,7 @@ python_path = '/auto/users/hellerc/miniconda3/envs/lbhb/bin/python'
 script = "/auto/users/hellerc/code/projects/TBP-ms/decoding/do_decoding.py"
 force_rerun = False
 FA_simulation = False
+regress_pupil = True
 ndim = 2
 # initial model list for testing
 modellist = [
@@ -48,6 +49,9 @@ modellist = [
     f'tbpDecoding_mask.h.cr_drmask.h.cr.pa_DRops.dim{ndim}.ddr-targetNoise-sharedSpace',
     f'tbpDecoding_mask.pa_drmask.h.cr.pa_DRops.dim{ndim}.ddr-targetNoise-sharedSpace',
 ]
+
+if regress_pupil:
+    modellist = [m+"_PR" for m in modellist]
 
 if FA_simulation:
     # m1 = [m+"_FA.1" for m in modellist]
