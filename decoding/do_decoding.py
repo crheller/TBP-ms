@@ -40,6 +40,7 @@ modelname = sys.argv[3]
 def parse_mask_options(op):
     mask = []
     mask_ops = op.split(".")
+    pup_match_active = False
     for mo in mask_ops:
         if mo=="h":
             mask.append("HIT_TRIAL")
@@ -51,7 +52,10 @@ def parse_mask_options(op):
             mask.append("FALSE_ALARM_TRIAL")
         if mo=="pa":
             mask.append("PASSIVE_EXPERIMENT")
-    return mask
+        if mo=="paB":
+            mask.append("PASSIVE_EXPERIMENT")
+            pup_match_active = True
+    return mask, pup_match_active
 
 mask = []
 drmask = []
@@ -63,13 +67,14 @@ sharedSpace = False
 factorAnalysis = False
 fa_perstim = False
 sim = None
+pup_match_active = False
 for op in modelname.split("_"):
     if op.startswith("mask"):
-        mask = parse_mask_options(op)
+        mask, pup_match_active = parse_mask_options(op)
     if op.startswith("drmask"):
-        drmask = parse_mask_options(op)
+        drmask, _ = parse_mask_options(op)
     if op.startswith("decmask"):
-        decmask = parse_mask_options(op)
+        decmask, _ = parse_mask_options(op)
     if op.startswith("DRops"):
         dim_reduction_options = op.split(".")
         for dro in dim_reduction_options:
@@ -101,7 +106,8 @@ X, Xp = loaders.load_tbp_for_decoding(site=site,
                                     wine = 0.4,
                                     collapse=True,
                                     mask=mask,
-                                    recache=False)
+                                    recache=False,
+                                    pupexclude=pup_match_active)
 
 # sim:
 #     0 = no change (null) model

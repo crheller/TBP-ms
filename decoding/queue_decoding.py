@@ -6,14 +6,15 @@ sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 python_path = '/auto/users/hellerc/miniconda3/envs/lbhb/bin/python'
 script = "/auto/users/hellerc/code/projects/TBP-ms/decoding/do_decoding.py"
 force_rerun = False
-FA_simulation = True
-
+FA_simulation = False
 ndim = 2
 # initial model list for testing
 modellist = [
     ## decoding axis specific to state (active vs. passive). This is default
     f'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim{ndim}.ddr-targetNoise',
     f'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim{ndim}.ddr-targetNoise',
+    ## same as above, but match pupil size in passive to active, stricly
+    f'tbpDecoding_mask.paB_drmask.h.cr.m.pa_DRops.dim{ndim}.ddr-targetNoise',
     # no misses
     f'tbpDecoding_mask.h.cr_drmask.h.cr.pa_DRops.dim{ndim}.ddr-targetNoise',
     f'tbpDecoding_mask.pa_drmask.h.cr.pa_DRops.dim{ndim}.ddr-targetNoise',
