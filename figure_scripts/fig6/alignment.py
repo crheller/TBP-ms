@@ -52,7 +52,7 @@ for site in sites:
                 mm = (ares["e1"]==e) & (ares["e2"]==tar)
                 _du = ares[mm]["dU"].iloc[0]
                 dua = (_du / np.linalg.norm(_du)).dot(ares[mm]["dr_loadings"].iloc[0]).squeeze()
-                dfa.loc[rra, :]  = [abs(afa.dot(dua)), e, ares[mm]["e2"].iloc[0], area, site]
+                dfa.loc[rra, :]  = [np.abs(afa.dot(dua)), e, ares[mm]["e2"].iloc[0], area, site]
                 rra += 1
 
             tars = ares[(ares["e1"]==e) & (ares["e2"].str.startswith("TAR"))].e2
@@ -60,7 +60,7 @@ for site in sites:
                 mm = (ares["e1"]==e) & (ares["e2"]==tar)
                 _dup = ares[mm]["dU"].iloc[0]
                 dup = (_dup / np.linalg.norm(_dup)).dot(ares[mm]["dr_loadings"].iloc[0]).squeeze()
-                dfp.loc[rrp, :]  = [abs(pfa.dot(dup)), e, ares[mm]["e2"].iloc[0], area, site]
+                dfp.loc[rrp, :]  = [np.abs(pfa.dot(dup)), e, ares[mm]["e2"].iloc[0], area, site]
                 rrp += 1
 
         except IndexError:
@@ -88,16 +88,24 @@ f.tight_layout()
 
 f.savefig(os.path.join(figpath, "alignment_errorbar.svg"), dpi=500)
 
+# pvalues
+a1pval = ss.wilcoxon(df[df.area=="A1"]["acos_sim"], df[df.area=="A1"]["pcos_sim"])
+pegpval = ss.wilcoxon(df[df.area=="PEG"]["acos_sim"], df[df.area=="PEG"]["pcos_sim"])
+print(f"a1 alignement pval: {a1pval.pvalue}")
+print(f"peg alignement pval: {pegpval.pvalue}")
+
 
 # =====================================================================
-# relationship between behavior and the change in alignment
+# relationship between behavior and noise vs. decoding alignment
 beh_df = pd.read_pickle(os.path.join(RESULTS_DIR, "behavior_recordings", "all_trials.pickle"))
 # Plot relationship between behavior and neural dprime
 bg = beh_df.groupby(by=["site", "e1"]).mean()
 bg = bg.reset_index()
 bg["e1"] = ["TAR_"+e for e in bg["e1"]]
 merge = df.merge(bg, on=["e1","site"])
-merge["delta"] = merge["pcos_sim"] - merge["acos_sim"]
+merge["delta"] = merge["acos_sim"] #- merge["pcos_sim"]
+merge["snr"] = [float(snr[1].strip("dB")) for snr in merge["e1"].str.split("+")]
+merge["snr"] = [snr if snr!=np.inf else 10 for snr in merge["snr"]]
 merge = merge.astype({
     "delta": float,
     "dprime": float
@@ -105,10 +113,20 @@ merge = merge.astype({
 a1_merge = merge[merge.area=="A1"]
 peg_merge = merge[merge.area=="PEG"]
 
+# ANOVA -- does SNR or behavior explain the change in alignment
+import statsmodels.api as sm
+Y = a1_merge["dprime"]
+X = a1_merge[["snr", "delta"]]
+X = (X - X.mean(axis=0)) / X.std(axis=0)
+X = sm.add_constant(X)
+model = sm.OLS(Y,X)
+results = model.fit()
+results.summary()
+
 nboots = 500
-s = 10
-delta_ylim = (-0.75, 0.75)
-colors = ["grey", "k"]
+s = 20
+delta_ylim = (None, None) #(-0.25, 1)
+colors = ["snr", "snr"] #["grey", "k"]
 delta_metric = "delta"
 
 f, ax = plt.subplots(1, 2, figsize=(4, 2))
@@ -119,14 +137,23 @@ for i, (_df, c) in enumerate(zip([a1_merge, peg_merge], colors)):
     xp = np.linspace(np.min(x), np.max(x), 100)
     r, p = ss.pearsonr(x, _df[delta_metric])
     leg = f"r={round(r, 3)}, p={round(p, 3)}"
-    ax[i].scatter(x, _df[delta_metric], 
-                    s=s, c=c, edgecolor="none", lw=0)
+    if c=="snr":
+        sidx = np.argsort(_df["snr"]).values
+        ax[i].scatter(x.values[sidx], _df[delta_metric].values[sidx], 
+                        s=s, c=_df["snr"].values[sidx], 
+                        vmin=-15, vmax=5, cmap="Reds", edgecolor="none", lw=0)
+    else:
+        ax[i].scatter(x, _df[delta_metric], 
+                s=s, c=c, edgecolor="none", lw=0)
 
     # get line of best fit
     z = np.polyfit(x, _df[delta_metric], 1)
     # plot line of best fit
     p_y = z[1] + z[0] * xp
-    ax[i].plot(xp, p_y, lw=2, color=c)
+    if c=="snr":
+        ax[i].plot(xp, p_y, lw=2, color="k")
+    else:
+        ax[i].plot(xp, p_y, lw=2, color=c)
     
     # bootstrap condifence interval
     boot_preds = []
@@ -138,7 +165,10 @@ for i, (_df, c) in enumerate(zip([a1_merge, peg_merge], colors)):
     bse = np.stack(boot_preds).std(axis=0)
     lower = p_y - bse
     upper = p_y + bse
-    ax[i].fill_between(xp, lower, upper, color=c, alpha=0.5, lw=0)
+    if c=="snr":
+        ax[i].fill_between(xp, lower, upper, color="k", alpha=0.5, lw=0)
+    else:
+        ax[i].fill_between(xp, lower, upper, color=c, alpha=0.5, lw=0)
 
     ax[i].set_ylim(delta_ylim)
 
