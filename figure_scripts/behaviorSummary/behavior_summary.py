@@ -16,9 +16,11 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
-mpl.rcParams['font.size'] = 12
+mpl.rcParams['font.size'] = 8
 
 results_path = "/auto/users/hellerc/results/TBP-ms/behavior"
+
+figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/behaviorSupplement"
 
 animals = [
     "Armillaria",
@@ -55,7 +57,9 @@ for an in animals:
     bins = np.arange(0, 1.4, 0.001)
     plot_RT_histogram(rts, bins=bins, ax=ax, cmap=gR, lw=2, legend=legend)
     ax.set_title(an)
+    ax.set_ylim((None, 1))
     f.tight_layout()
+    f.savefig(os.path.join(figpath, f"{an}.svg"), dpi=500)
 
     # save di / dprime
     di[an] = DI
