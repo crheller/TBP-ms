@@ -42,11 +42,14 @@ modelname = sys.argv[3]
 
 shuffle = False
 perstim = False
+regress_pupil = False
 for op in modelname.split("_"):
     if op == "shuff":
         shuffle = True
     if op == "perstim":
         perstim = True
+    if op == "PR":
+        regress_pupil = True
 
 # measure change in dimensionality, %sv, loading sim, across jackknifes
 def get_dim(LL):
@@ -103,14 +106,16 @@ X_active, _ = loaders.load_tbp_for_decoding(site=site,
                                     wine = 0.4,
                                     collapse=True,
                                     mask=["HIT_TRIAL", "MISS_TRIAL", "CORRECT_REJECT_TRIAL"],
-                                    recache=False)
+                                    recache=False,
+                                    regresspupil=regress_pupil)
 X_passive, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
                                     mask=["PASSIVE_EXPERIMENT"],
-                                    recache=False)
+                                    recache=False,
+                                    regresspupil=regress_pupil)
 
 # keep only CAT and TAR stims and turn into a 4D matrix (cells x reps x stim x tbins)
 keep = [t for t in X_active.keys() if (("TAR_" in t) | ("CAT_" in t)) & (t in X_passive.keys())]

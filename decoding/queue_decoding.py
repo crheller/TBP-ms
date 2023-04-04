@@ -6,7 +6,7 @@ sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 python_path = '/auto/users/hellerc/miniconda3/envs/lbhb/bin/python'
 script = "/auto/users/hellerc/code/projects/TBP-ms/decoding/do_decoding.py"
 force_rerun = False
-FA_simulation = False
+FA_simulation = True
 regress_pupil = True
 ndim = 2
 # initial model list for testing
@@ -59,6 +59,8 @@ if FA_simulation:
     # m3 = [m+"_FA.3" for m in modellist]
     # m4 = [m+"_FA.4" for m in modellist]
     
+    # null model
+    m0 = [m+"_FAperstim.0" for m in modellist]
     # no correlation models
     m1 = [m+"_FAperstim.5" for m in modellist]
     m2 = [m+"_FAperstim.6" for m in modellist]
@@ -68,7 +70,9 @@ if FA_simulation:
     m6 = [m+"_FAperstim.2" for m in modellist]
     m7 = [m+"_FAperstim.3" for m in modellist]
     m8 = [m+"_FAperstim.4" for m in modellist]
-    modellist = m1 + m2 + m5 + m6 + m7 + m8
+    modellist = m0 + m1 + m2 + m5 + m6 + m7 + m8
+    if regress_pupil:
+        modellist = [m+".PR" for m in modellist]
 
 bad_sites = [
     "ARM004e",

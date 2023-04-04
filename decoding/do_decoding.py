@@ -69,6 +69,7 @@ fa_perstim = False
 sim = None
 pup_match_active = False
 regress_pupil = False
+fa_model = "FA_perstim"
 for op in modelname.split("_"):
     if op.startswith("mask"):
         mask, pup_match_active = parse_mask_options(op)
@@ -97,6 +98,14 @@ for op in modelname.split("_"):
         factorAnalysis = True
         sim_method = int(op.split(".")[1])
         fa_perstim = op.split(".")[0][2:]=="perstim"
+        try:
+            log.info("Using pupil regressed FA models")
+            if op.split(".")[2]=="PR":
+                fa_model = "FA_perstim_PR"
+        except:
+            log.info("Didn't find a pupil regress FA option")
+            pass
+
 
 if decmask == []:
     # default is to compute decoding axis using the same data you're evaluating on
@@ -131,11 +140,12 @@ if factorAnalysis:
     else:
         state = "active"
     if fa_perstim:
+        log.info(f"Loading factor analysis results from {fa_model}")
         keep = [k for k in Xog.keys() if ("TAR_" in k) | ("CAT_" in k)]
         Xog = {k: v for k, v in Xog.items() if k in keep}
         psth = {k: v.mean(axis=1).squeeze() for k, v in Xog.items()}
         log.info("Loading FA simulation using per stimulus results")
-        X = loaders.load_FA_model_perstim(site, batch, psth, state, sim=sim_method, nreps=2000)
+        X = loaders.load_FA_model_perstim(site, batch, psth, state, fa_model=fa_model, sim=sim_method, nreps=2000)
         Xog = {k: v for k, v in Xog.items() if k in X.keys()}
     else:
         log.info("Loading FA simulation")

@@ -21,6 +21,8 @@ mpl.rcParams['font.size'] = 8
 
 figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig5"
 
+nboots = 1000 # for sig testing
+
 batch = 324
 sqrt = True
 sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
@@ -62,6 +64,7 @@ df["delta_raw"] = df["dp_y"] - df["dp_x"]
 
 # overall delta dprime for tar vs. catch
 print("DELTA DPRIME")
+np.random.seed(123)
 f, ax = plt.subplots(1, 1, figsize=(4, 2))
 f2, ax2 = plt.subplots(1, 1, figsize=(1, 2))
 for col, area in zip(["tab:blue", "tab:orange"], ["A1", "PEG"]):
@@ -82,10 +85,29 @@ for col, area in zip(["tab:blue", "tab:orange"], ["A1", "PEG"]):
     
     # compute stepwise p-values
     cc = []
+    cc_high = []
+    cc_low = []
     for i in range(len(u)-1):
         _cc, pval = ss.pearsonr(uall[i], uall[-1])
         cc.append(_cc)
         print(f"{area}, pvalue of correlation for {i} vs. raw data: {pval}")
+        # bootstrap cc
+        boot_cc = []
+        for bb in range(nboots):
+            rs = np.random.choice(range(len(uall[i])), len(uall[i]), replace=True)
+            ccbb, _ = ss.pearsonr(uall[i][rs], uall[-1][rs])
+            boot_cc.append(ccbb)
+        cc_low.append(np.quantile(boot_cc, 0.025))
+        cc_high.append(np.quantile(boot_cc, 0.95))
+
+    # pairwise pvalues of CC
+    print("pvalue of cc sim vs. cc actual, using bootstrap")
+    for i in range(len(cc)-1):
+        if cc_high[i] > cc[-1]:
+            print(f"{area} sim {i} is NOT significantly different than actual")
+        else:
+            print(f"{area} sim {i} is significantly different than actual")
+
     ax2.plot(cc, color=col, linestyle="-")
 ax2.set_ylim((None, 1))
 for a in [ax, ax2]:
@@ -95,6 +117,7 @@ f2.savefig(os.path.join(figpath, "delta_dprime_cc.svg"), dpi=500)
 
 # selectivity
 print("SELECTIVITY")
+np.random.seed(123)
 f, ax = plt.subplots(1, 1, figsize=(4, 2))
 f2, ax2 = plt.subplots(1, 1, figsize=(1, 2))
 for col, area in zip(["tab:blue", "tab:orange"], ["A1", "PEG"]):
@@ -115,10 +138,31 @@ for col, area in zip(["tab:blue", "tab:orange"], ["A1", "PEG"]):
     
     # compute stepwise p-values
     cc = []
+    cc_low = []
+    cc_high = []
+    nboots = 100
     for i in range(len(u)-1):
         _cc, pval = ss.pearsonr(uall[i], uall[-1])
         cc.append(_cc)
         print(f"{area}, pvalue of correlation for {i} vs. raw data: {pval}")
+        # bootstrap cc
+        boot_cc = []
+        for bb in range(nboots):
+            rs = np.random.choice(range(len(uall[i])), len(uall[i]), replace=True)
+            ccbb, _ = ss.pearsonr(uall[i][rs], uall[-1][rs])
+            boot_cc.append(ccbb)
+        cc_low.append(np.quantile(boot_cc, 0.025))
+        cc_high.append(np.quantile(boot_cc, 0.95))
+    
+    # pairwise pvalues of CC
+    print("pvalue of cc sim vs. cc actual, using bootstrap")
+    for i in range(len(cc)-1):
+        if cc_high[i] > cc[-1]:
+            print(f"{area} sim {i} is NOT significantly different than actual")
+        else:
+            print(f"{area} sim {i} is significantly different than actual")
+
+
     ax2.plot(cc, color=col, linestyle="-")
 ax2.set_ylim((None, 1))
 for a in [ax, ax2]:

@@ -4,7 +4,7 @@ sys.path.append("/auto/users/hellerc/code/projects/TBP-ms/")
 from settings import BAD_SITES
 
 batches = [324]
-modelnames = ["FA_perstim"]
+modelnames = ["FA_perstim_PR"]
 force_rerun = True
 
 for batch in batches:

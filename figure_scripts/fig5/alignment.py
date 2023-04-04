@@ -23,7 +23,7 @@ mpl.rcParams['font.size'] = 8
 mpl.rcParams['xtick.labelsize'] = 8
 mpl.rcParams['ytick.labelsize'] = 8 
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig6/"
+figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig5/"
 
 batch = 324
 sqrt = True
