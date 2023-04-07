@@ -32,7 +32,7 @@ sites = [s for s in sites if s not in BAD_SITES]
 df = pd.DataFrame(columns=["asv", "psv", "als", "pls", "adim", "pdim", "site", "area", "epoch"])
 rr = 0
 for site in sites:
-    d = pd.read_pickle(os.path.join(RESULTS_DIR, "factor_analysis", str(batch), site, "FA_perstim.pickle"))
+    d = pd.read_pickle(os.path.join(RESULTS_DIR, "factor_analysis", str(batch), site, "FA_perstim_PR.pickle"))
     area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",)).iloc[0][0]
     for e in d["active"].keys():
         df.loc[rr, :] = [

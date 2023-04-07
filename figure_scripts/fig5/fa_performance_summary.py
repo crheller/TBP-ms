@@ -27,9 +27,9 @@ batch = 324
 sqrt = True
 sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 
-factor_models = ["_FAperstim.0", "_FAperstim.1", "_FAperstim.3", "_FAperstim.4", ""]
-amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
-pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
+factor_models = ["_FAperstim.0.PR", "_FAperstim.1.PR", "_FAperstim.3.PR", "_FAperstim.4.PR", ""]
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
 sites = [s for s in sites if s not in BAD_SITES]
 active = []
 passive = []
@@ -42,7 +42,7 @@ for site in sites:
             area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",))
             area = area.iloc[0][0]
             ares["area"] = area; pres["area"] = area
-            ares["FA"] = fa.split(".")[-1]; pres["FA"] = fa.split(".")[-1]; 
+            ares["FA"] = fa; pres["FA"] = fa; 
             if sqrt:
                 ares["dp"] = np.sqrt(ares["dp"])
                 pres["dp"] = np.sqrt(pres["dp"])
@@ -67,21 +67,30 @@ print("DELTA DPRIME")
 np.random.seed(123)
 f, ax = plt.subplots(1, 1, figsize=(4, 2))
 f2, ax2 = plt.subplots(1, 1, figsize=(1, 2))
-for col, area in zip(["tab:blue", "tab:orange"], ["A1", "PEG"]):
+f3, ax3 = plt.subplots(2, 4, figsize=(4, 2), sharex=True, sharey=True)
+for j, (col, area) in enumerate(zip(["grey", "k"], ["A1", "PEG"])):
     u = []
     se = []
     uall = []
     for i, fa in enumerate(factor_models):
         # get mean tar vs. catch delta dprime for each site
-        mask = (df.area==area) & (df.FA==fa.split(".")[-1])
+        mask = (df.area==area) & (df.FA==fa)
         tc_mean_dprime = df[mask & (df["class"]=="tar_cat")].groupby(by="site").mean()["delta"]
         # get mean tar vs. tar delta dprime for each site
         tt_mean_dprime = df[mask & (df["class"]=="tar_tar")].groupby(by="site").mean()["delta"]
-        uall.append(tc_mean_dprime.values)
-        u.append((tc_mean_dprime).mean())
-        se.append((tc_mean_dprime).std() / np.sqrt(tc_mean_dprime.shape[0]))
+        # uall.append(tc_mean_dprime.values)
+        uall.append(np.concatenate((tt_mean_dprime.values, tc_mean_dprime.values)))
+        u.append(uall[i].mean())
+        se.append(uall[i].std() / np.sqrt(len(uall[i])))
     ax.plot(range(len(u)-1), u[:-1], color=col)
-    ax.scatter(len(u)-1, u[-1], color=col)
+    ax.fill_between(range(len(u)-1), np.array(u[:-1])-np.array(se[:-1]), 
+                        np.array(u[:-1])+np.array(se[:-1]), alpha=0.5, lw=0, color=col)
+    ax.errorbar(len(u)-1, u[-1], yerr=se[-1], capsize=2,
+                 marker="o", color=col)
+
+    # scatter plot of performance
+    for i, tu in enumerate(uall[:-1]):
+        ax3[j, i].scatter(uall[-1], tu, c=col, s=5)
     
     # compute stepwise p-values
     cc = []
@@ -101,32 +110,36 @@ for col, area in zip(["tab:blue", "tab:orange"], ["A1", "PEG"]):
         cc_high.append(np.quantile(boot_cc, 0.95))
 
     # pairwise pvalues of CC
-    print("pvalue of cc sim vs. cc actual, using bootstrap")
+    print("pvalue of cc sim vs. cc full sim, using bootstrap")
     for i in range(len(cc)-1):
         if cc_high[i] > cc[-1]:
-            print(f"{area} sim {i} is NOT significantly different than actual")
+            print(f"{area} sim {i} is NOT significantly different than full sim")
         else:
-            print(f"{area} sim {i} is significantly different than actual")
+            print(f"{area} sim {i} is significantly different than full sim")
 
     ax2.plot(cc, color=col, linestyle="-")
 ax2.set_ylim((None, 1))
 for a in [ax, ax2]:
     a.axhline(0, linestyle="--", color="k")
+for a in ax3.flatten():
+    a.set_ylim((-0.25, 0.5)); a.set_xlim((-0.25, 0.5))
+    a.plot([-0.25, 0.5], [-0.25, 0.5], "k--", zorder=-1)
 f.savefig(os.path.join(figpath, "delta_dprime_vals.svg"), dpi=500)
 f2.savefig(os.path.join(figpath, "delta_dprime_cc.svg"), dpi=500)
+f3.savefig(os.path.join(figpath, "delta_dprime_scatter.svg"), dpi=500)
 
 # selectivity
 print("SELECTIVITY")
 np.random.seed(123)
 f, ax = plt.subplots(1, 1, figsize=(4, 2))
 f2, ax2 = plt.subplots(1, 1, figsize=(1, 2))
-for col, area in zip(["tab:blue", "tab:orange"], ["A1", "PEG"]):
+for col, area in zip(["grey", "k"], ["A1", "PEG"]):
     u = []
     se = []
     uall = []
     for i, fa in enumerate(factor_models):
         # get mean tar vs. catch delta dprime for each site
-        mask = (df.area==area) & (df.FA==fa.split(".")[-1])
+        mask = (df.area==area) & (df.FA==fa)
         tc_mean_dprime = df[mask & (df["class"]=="tar_cat")].groupby(by="site").mean()["delta"]
         # get mean tar vs. tar delta dprime for each site
         tt_mean_dprime = df[mask & (df["class"]=="tar_tar")].groupby(by="site").mean()["delta"]
@@ -134,7 +147,10 @@ for col, area in zip(["tab:blue", "tab:orange"], ["A1", "PEG"]):
         u.append((tc_mean_dprime - tt_mean_dprime).mean())
         se.append((tc_mean_dprime - tt_mean_dprime).std() / np.sqrt(tc_mean_dprime.shape[0]))
     ax.plot(range(len(u)-1), u[:-1], color=col)
-    ax.scatter(len(u)-1, u[-1], color=col)
+    ax.fill_between(range(len(u)-1), np.array(u[:-1])-np.array(se[:-1]), 
+                        np.array(u[:-1])+np.array(se[:-1]), alpha=0.5, lw=0, color=col)
+    ax.errorbar(len(u)-1, u[-1], yerr=se[-1], capsize=2,
+                 marker="o", color=col)
     
     # compute stepwise p-values
     cc = []
