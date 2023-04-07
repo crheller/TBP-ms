@@ -122,6 +122,17 @@ X, Xp = loaders.load_tbp_for_decoding(site=site,
                                     pupexclude=pup_match_active,
                                     regresspupil=regress_pupil)
 
+# for null simulation, load the active PSTH regardless of current state
+X_all, _ = loaders.load_tbp_for_decoding(site=site, 
+                                    batch=batch,
+                                    wins = 0.1,
+                                    wine = 0.4,
+                                    collapse=True,
+                                    mask=["HIT_TRIAL", "CORRECT_REJECT_TRIAL", "MISS_TRIAL", "PASSIVE_EXPERIMENT"],
+                                    recache=False,
+                                    pupexclude=pup_match_active,
+                                    regresspupil=regress_pupil)
+
 # sim:
 #     0 = no change (null) model
 #     1 = change in gain only
@@ -141,12 +152,20 @@ if factorAnalysis:
         state = "active"
     if fa_perstim:
         log.info(f"Loading factor analysis results from {fa_model}")
-        keep = [k for k in Xog.keys() if ("TAR_" in k) | ("CAT_" in k)]
-        Xog = {k: v for k, v in Xog.items() if k in keep}
-        psth = {k: v.mean(axis=1).squeeze() for k, v in Xog.items()}
+        if sim_method==0:
+            log.info("Fixing PSTH between active / passive to active")
+            keep = [k for k in X_all.keys() if ("TAR_" in k) | ("CAT_" in k)]
+            X_all = {k: v for k, v in X_all.items() if k in keep}
+            psth = {k: v.mean(axis=1).squeeze() for k, v in X_all.items()}
+            Xog = {k: v for k, v in X_all.items() if k in X.keys()}
+        else:
+            keep = [k for k in Xog.keys() if ("TAR_" in k) | ("CAT_" in k)]
+            Xog = {k: v for k, v in Xog.items() if k in keep}
+            psth = {k: v.mean(axis=1).squeeze() for k, v in Xog.items()}
+            Xog = {k: v for k, v in Xog.items() if k in X.keys()}
+
         log.info("Loading FA simulation using per stimulus results")
         X = loaders.load_FA_model_perstim(site, batch, psth, state, fa_model=fa_model, sim=sim_method, nreps=2000)
-        Xog = {k: v for k, v in Xog.items() if k in X.keys()}
     else:
         log.info("Loading FA simulation")
         psth = {k: v.mean(axis=1).squeeze() for k, v in X.items()}
