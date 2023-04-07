@@ -108,8 +108,10 @@ ax.scatter(
     s=s, c="k", alpha=alpha,
     edgecolor="none"
 )
-ax.set_xlim((vals.values.min(), vals.values.max()))
-ax.set_ylim((vals.values.min(), vals.values.max()))
+# ax.set_xlim((vals.values.min(), vals.values.max()))
+# ax.set_ylim((vals.values.min(), vals.values.max()))
+ax.set_xlim((-5, 10))
+ax.set_ylim((-5, 10))
 ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
@@ -123,8 +125,10 @@ ax.scatter(
     s=s, c="k", alpha=alpha,
     edgecolor="none"
 )
-ax.set_xlim((vals.values.min(), vals.values.max()))
-ax.set_ylim((vals.values.min(), vals.values.max()))
+# ax.set_xlim((vals.values.min(), vals.values.max()))
+# ax.set_ylim((vals.values.min(), vals.values.max()))
+ax.set_xlim((-5, 10))
+ax.set_ylim((-5, 10))
 ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
