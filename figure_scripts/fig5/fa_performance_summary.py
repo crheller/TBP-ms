@@ -178,7 +178,6 @@ for col, area in zip(["grey", "k"], ["A1", "PEG"]):
         else:
             print(f"{area} sim {i} is significantly different than actual")
 
-
     ax2.plot(cc, color=col, linestyle="-")
 ax2.set_ylim((None, 1))
 for a in [ax, ax2]:
