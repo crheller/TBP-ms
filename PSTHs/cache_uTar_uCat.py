@@ -7,6 +7,7 @@ Cache results to load for figure 2.
 from nems_lbhb.baphy_experiment import BAPHYExperiment
 import nems_lbhb.tin_helpers as thelp
 import scipy.ndimage.filters as sf
+import scipy.stats as ss
 import sys
 import nems0.db as nd
 sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
@@ -47,6 +48,11 @@ for site in sites:
             atresp = rec["resp"].extract_epoch(str(tar), mask=arec["mask"])
             ptresp = rec["resp"].extract_epoch(str(tar), mask=prec["mask"])
 
+            # statistical test across trials
+            pval = np.zeros(atresp.shape[1])
+            for n in range(atresp.shape[1]):
+                pval[n] = ss.ranksums(atresp[:, n, int(0.1*fs):int(0.4*fs)].mean(axis=-1), ptresp[:, n, int(0.1*fs):int(0.4*fs)].mean(axis=-1)).pvalue
+
             at_psth = atresp.mean(axis=0)[:, :int(0.5 * fs)]
             pt_psth = ptresp.mean(axis=0)[:, :int(0.5 * fs)]
 
@@ -60,10 +66,10 @@ for site in sites:
             presp = np.sum(pt_psth[:, int(0.1*fs):int(0.4*fs)], axis=1) * dur_s
 
             df = pd.DataFrame(index=rec["resp"].chans,
-                                data=np.vstack([aresp, presp, [tar] * at_psth.shape[0], 
+                                data=np.vstack([aresp, presp, pval, [tar] * at_psth.shape[0], 
                                                 [site] * at_psth.shape[0],
                                                 [area] * at_psth.shape[0]]).T,
-                                columns=["active", "passive", "epoch", "site", "area"])
+                                columns=["active", "passive", "pval", "epoch", "site", "area"])
             dfs.append(df)
         except:
             print(f"didn't find epoch: {tar}")
@@ -73,6 +79,7 @@ df["snr"] = [v[1] for v in df["epoch"].str.split("+").values]
 df = df.astype({
     "active": float,
     "passive": float,
+    "pval": float,
     "snr": object,
     "area": object,
     "epoch": object,
