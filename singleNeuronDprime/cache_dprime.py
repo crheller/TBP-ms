@@ -96,6 +96,33 @@ for site in sites:
                     null_delta_low_ci = np.quantile(adprime_null-pdprime_null, 0.025)
                     null_delta_high_ci = np.quantile(adprime_null-pdprime_null, 0.975)
 
+                    # null_active_high = np.quantile(adprime_null, 0.95)
+                    # null_passive_high = np.quantile(pdprime_null, 0.95)
+
+                    # second resampling to test if d-prime itself for this pair is significant
+                    # idea here is to randomly assign a stimulus ID to each repetition and
+                    # compute a null distribution of dprime. Do it separately for active / passive
+                    ndraw_active = np.min([ar1.shape[0], ar2.shape[0]])
+                    ndraw_passive = np.min([pr1.shape[0], pr2.shape[0]])
+                    adprime_null = np.zeros(n_resamples)
+                    pdprime_null = np.zeros(n_resamples)
+                    for rs in range(n_resamples):
+                        ssActive_all = np.concatenate(
+                                [
+                                    ar1[np.random.choice(np.arange(ar1.shape[0]), ndraw_active, replace=True), [n]],
+                                    ar2[np.random.choice(np.arange(ar2.shape[0]), ndraw_active, replace=True), [n]]
+                                ], axis=0
+                        )
+                        ssPassive_all = np.concatenate(
+                                [
+                                    pr1[np.random.choice(np.arange(pr1.shape[0]), ndraw_passive, replace=True), [n]],
+                                    pr2[np.random.choice(np.arange(pr2.shape[0]), ndraw_passive, replace=True), [n]]
+                                ], axis=0
+                        )
+                        np.random.shuffle(ssActive_all); np.random.shuffle(ssPassive_all)
+                        adprime_null[rs] = np.sqrt(abs(compute_dprime(ssActive_all[:ndraw_active, np.newaxis].T, ssActive_all[ndraw_active:, np.newaxis].T)))
+                        pdprime_null[rs] = np.sqrt(abs(compute_dprime(ssPassive_all[:ndraw_passive, np.newaxis].T, ssPassive_all[ndraw_passive:, np.newaxis].T)))
+
                     null_active_high = np.quantile(adprime_null, 0.95)
                     null_passive_high = np.quantile(pdprime_null, 0.95)
 

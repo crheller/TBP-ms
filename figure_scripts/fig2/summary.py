@@ -23,7 +23,7 @@ df_resp = pd.read_csv("/auto/users/hellerc/results/TBP-ms/tar_vs_cat.csv", index
 df_dprime = pd.read_csv("/auto/users/hellerc/results/TBP-ms/singleNeuronDprime.csv", index_col=0)
 gg_resp = df_resp.groupby(by=["snr", "cellid", "area"]).mean()
 s = 3
-alpha = 0.7
+alpha = 1
 
 
 # PEG
@@ -57,12 +57,13 @@ ax.scatter(
     s=s*2, c="k", alpha=alpha,
     edgecolor="none", rasterized=True
 )
-ax.set_xlim((vals.values.min(), vals.values.max()))
-ax.set_ylim((vals.values.min(), vals.values.max()))
+ax.set_xlim((vals.values.min(), vals.values.max()+0.5))
+ax.set_ylim((vals.values.min(), vals.values.max()+0.5))
 ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
 f.savefig(os.path.join(figpath, "passive_resp_peg.svg"), dpi=500)
+print(f"{sum(vals.psig)}/{vals.shape[0]} significant, passive, dPEG \n")
 
 # mean responses active
 f, ax = plt.subplots(1, 1, figsize=(1, 1))
@@ -70,7 +71,7 @@ ax.scatter(
     vals["active_y"],
     vals["active_x"],
     s=s, c="grey", alpha=alpha,
-    edgecolor="none", rasterized=True
+    edgecolor="none", rasterized=False
 )
 ax.scatter(
     vals["active_y"][vals.asig],
@@ -78,17 +79,18 @@ ax.scatter(
     s=s*2, c="k", alpha=alpha,
     edgecolor="none", rasterized=True
 )
-ax.set_xlim((vals.values.min(), vals.values.max()))
-ax.set_ylim((vals.values.min(), vals.values.max()))
+ax.set_xlim((vals.values.min(), vals.values.max()+0.5))
+ax.set_ylim((vals.values.min(), vals.values.max()+0.5))
 ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
 f.savefig(os.path.join(figpath, "active_resp_peg.svg"), dpi=500)
+print(f"{sum(vals.asig)}/{vals.shape[0]} significant, active, dPEG \n")
 
 # delta dprime histogram
 dd = df_dprime[(df_dprime.area=="PEG") & (df_dprime.category=="tar_cat")]
 dd = dd[(dd.e1.str.contains("\+InfdB")) | (dd.e2.str.contains("\+InfdB"))]
-f, ax = plt.subplots(1, 1, figsize=(5, 5))
+f, ax = plt.subplots(1, 1, figsize=(1, 1))
 
 ax.hist(
     dd["active"]-dd["passive"],
@@ -107,7 +109,7 @@ ax.hist(
     histtype="stepfilled"
 )
 f.savefig(os.path.join(figpath, "delta_dprime_peg.svg"), dpi=500)
-
+print(f"{sum(sig_bool)}/{len(sig_bool)} significant change in d-prime dPEG \n")
 
 
 # A1
@@ -127,19 +129,20 @@ pval_df = pd.DataFrame(index=vals_dprime["cellid"], columns=["asig", "psig"], da
 vals = vals.merge(pval_df, left_index=True, right_index=True)
 
 # mean responses passive
+inrange = (vals["passive_y"]>-5) & (vals["passive_y"]<10) & (vals["passive_x"]>-5) & (vals["passive_y"]<10)
 f, ax = plt.subplots(1, 1, figsize=(1, 1))
 
 ax.scatter(
-    vals["passive_y"],
-    vals["passive_x"],
+    vals["passive_y"][inrange],
+    vals["passive_x"][inrange],
     s=s, c="grey", alpha=alpha,
-    edgecolor="none", rasterized=True
+    edgecolor="none", rasterized=False
 )
 ax.scatter(
-    vals["passive_y"][vals.psig],
-    vals["passive_x"][vals.psig],
+    vals["passive_y"][vals.psig & inrange],
+    vals["passive_x"][vals.psig & inrange],
     s=s*2, c="k", alpha=alpha,
-    edgecolor="none", rasterized=True
+    edgecolor="none", rasterized=False
 )
 # ax.set_xlim((vals.values.min(), vals.values.max()))
 # ax.set_ylim((vals.values.min(), vals.values.max()))
@@ -149,20 +152,22 @@ ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
 f.savefig(os.path.join(figpath, "passive_resp_a1.svg"), dpi=500)
+print(f"{sum(vals.psig)}/{vals.shape[0]} significant, passive, A1 \n")
 
 # mean responses active
+inrange = (vals["active_y"]>-5) & (vals["active_y"]<10) & (vals["active_x"]>-5) & (vals["active_y"]<10)
 f, ax = plt.subplots(1, 1, figsize=(1, 1))
 ax.scatter(
     vals["active_y"],
     vals["active_x"],
     s=s, c="grey", alpha=alpha,
-    edgecolor="none", rasterized=True
+    edgecolor="none", rasterized=False
 )
 ax.scatter(
     vals["active_y"][vals.asig],
     vals["active_x"][vals.asig],
     s=s*2, c="k", alpha=alpha,
-    edgecolor="none", rasterized=True
+    edgecolor="none", rasterized=False
 )
 # ax.set_xlim((vals.values.min(), vals.values.max()))
 # ax.set_ylim((vals.values.min(), vals.values.max()))
@@ -172,11 +177,12 @@ ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
 f.savefig(os.path.join(figpath, "active_resp_a1.svg"), dpi=500)
+print(f"{sum(vals.asig)}/{vals.shape[0]} significant, active, A1 \n")
 
 # delta dprime histogram
 dd = df_dprime[(df_dprime.area=="A1") & (df_dprime.category=="tar_cat")]
 dd = dd[(dd.e1.str.contains("\+InfdB")) | (dd.e2.str.contains("\+InfdB"))]
-f, ax = plt.subplots(1, 1, figsize=(5, 5))
+f, ax = plt.subplots(1, 1, figsize=(1, 1))
 
 ax.hist(
     dd["active"]-dd["passive"],
@@ -195,3 +201,4 @@ ax.hist(
     histtype="stepfilled"
 )
 f.savefig(os.path.join(figpath, "delta_dprime_a1.svg"), dpi=500)
+print(f"{sum(sig_bool)}/{len(sig_bool)} significant change in d-prime A1 \n")
