@@ -1,5 +1,6 @@
 """
 Is there a difference in choice decoding between A1 and PEG?
+Answer seems to be no, both have decent choice decoding at the population level.
 """
 import matplotlib.pyplot as plt
 import pandas as pd

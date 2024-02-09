@@ -12,9 +12,31 @@ ndim = 2
 modellist = [
     ## Catch choice decoding
     f'tbpChoiceDecoding_decision.cr.ich_DRops.dim{ndim}.ddr',
+    # cummulative time
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.05_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.1_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.15_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.2_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.25_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.3_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.35_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.4_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.45_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.5_decision.cr.ich_DRops.dim{ndim}.ddr',
 
     ## Target choice decoding
     f'tbpChoiceDecoding_decision.h.m_DRops.dim{ndim}.ddr',
+    # cummulative time
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.05_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.1_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.15_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.2_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.25_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.3_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.35_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.4_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.45_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.5_decision.h.m_DRops.dim{ndim}.ddr',
 ]
 
 if regress_pupil:

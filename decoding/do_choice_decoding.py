@@ -68,6 +68,9 @@ sim = None
 pup_match_active = False
 regress_pupil = False
 fa_model = "FA_perstim"
+window_start = 0.1 # by default, use the full stimulus
+window_end = 0.4 # by default, use the full stimulus
+fs = 10
 for op in modelname.split("_"):
     if op.startswith("decision"):
         mask, pup_match_active = parse_mask_options(op)
@@ -92,6 +95,13 @@ for op in modelname.split("_"):
         except:
             log.info("Didn't find a pupil regress FA option")
             pass
+    
+    if op.startswith("ws"):
+        window_start = float(op[2:])
+    if op.startswith("we"):
+        window_end = float(op[2:])
+    if op.startswith("fs"):
+        fs = int(op[2:])
 
 if len(mask) != 2:
     raise ValueError("decision mask should be len = 2. Condition 1 vs. condition 2 to be decoded (e.g. hit vs. miss)")
@@ -99,8 +109,9 @@ if len(mask) != 2:
 # STEP 3: Load data to be decoded / data to be use for decoding space definition
 X0, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins = window_start,
+                                    wine = window_end,
                                     collapse=True,
                                     mask=mask[0],
                                     recache=False,
@@ -108,8 +119,9 @@ X0, _ = loaders.load_tbp_for_decoding(site=site,
                                     regresspupil=regress_pupil)
 X1, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins = window_start,
+                                    wine = window_end,
                                     collapse=True,
                                     mask=mask[1],
                                     recache=False,
@@ -119,8 +131,9 @@ X1, _ = loaders.load_tbp_for_decoding(site=site,
 # for null simulation, load the mean PSTH regardless of current state
 X_all, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins = window_start,
+                                    wine = window_end,
                                     collapse=True,
                                     mask=["HIT_TRIAL", "CORRECT_REJECT_TRIAL", "MISS_TRIAL", "FALSE_ALARM_TRIAL"],
                                     recache=False,
@@ -169,16 +182,18 @@ if factorAnalysis:
 # always define the space with the raw, BALANCED data, for the sake of comparison
 Xd0, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins=0.1,
-                                    wine=0.4,
+                                    fs=fs,
+                                    wins=window_start,
+                                    wine=window_end,
                                     collapse=True,
                                     mask=mask[0],
                                     balance_choice=True,
                                     regresspupil=regress_pupil)
 Xd1, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins=0.1,
-                                    wine=0.4,
+                                    fs=fs,
+                                    wins=window_start,
+                                    wine=window_end,
                                     collapse=True,
                                     mask=mask[1],
                                     balance_choice=True,
@@ -186,7 +201,11 @@ Xd1, _ = loaders.load_tbp_for_decoding(site=site,
 
 # STEP 4: Generate list of stimuli to calculate choice decoding of (need min reps in each condition)
 # then, for each stimulus, define the dDR axes
-all_stimuli = [s for s in Xd0.keys() if (s.startswith("TAR") | s.startswith("CAT")) & (Xd0[s].shape[1]>=5)]
+poss_stim = list(set(Xd0.keys()) & set(Xd1.keys()))
+all_stimuli = [s for s in poss_stim if (s.startswith("TAR") | s.startswith("CAT")) & (Xd0[s].shape[1]>=5) & (Xd1[s].shape[1]>=5)]
+
+if len(all_stimuli) == 0:
+    raise ValueError("no stimuli matching requirements")
 
 pairs = list(combinations(mask, 2))
 decoding_space = []
@@ -218,6 +237,7 @@ for sp, axes in zip(all_stimuli, decoding_space):
     _r2 = Xdecoding[mask[1]][:, :, 0]
     _result = decoding.do_decoding(_r1, _r2, axes)
     
+    # then do decoding on this axis (with the potentially unbalanced data)
     X = dict.fromkeys(mask)
     X[mask[0]] = X0[sp]
     X[mask[1]] = X1[sp]
