@@ -18,6 +18,8 @@ import os
 import nems0
 import nems0.db as nd
 import logging
+import numpy as np
+import sklearn.cluster as skc
 
 log = logging.getLogger(__name__)
 
@@ -71,6 +73,7 @@ fa_model = "FA_perstim"
 window_start = 0.1 # by default, use the full stimulus
 window_end = 0.4 # by default, use the full stimulus
 fs = 10
+shuffle = False
 for op in modelname.split("_"):
     if op.startswith("decision"):
         mask, pup_match_active = parse_mask_options(op)
@@ -102,11 +105,13 @@ for op in modelname.split("_"):
         window_end = float(op[2:])
     if op.startswith("fs"):
         fs = int(op[2:])
+    if op.startswith("shuffle"):
+        shuffle = True
 
 if len(mask) != 2:
     raise ValueError("decision mask should be len = 2. Condition 1 vs. condition 2 to be decoded (e.g. hit vs. miss)")
 
-# STEP 3: Load data to be decoded / data to be use for decoding space definition
+# STEP 3: Load data to be decoded
 X0, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     fs=fs,
@@ -230,24 +235,47 @@ if len(decoding_space) != len(all_stimuli):
 output = []
 for sp, axes in zip(all_stimuli, decoding_space):
     # first, get decoding axis for this stim pair
-    Xdecoding = dict.fromkeys(mask)
+    Xdecoding = dict.fromkeys(mask)    
     Xdecoding[mask[0]] = Xd0[sp]
     Xdecoding[mask[1]] = Xd1[sp]
+
     _r1 = Xdecoding[mask[0]][:, :, 0]
     _r2 = Xdecoding[mask[1]][:, :, 0]
     _result = decoding.do_decoding(_r1, _r2, axes)
     
     # then do decoding on this axis (with the potentially unbalanced data)
     X = dict.fromkeys(mask)
-    X[mask[0]] = X0[sp]
-    X[mask[1]] = X1[sp]
+    if shuffle:
+        all_reps = np.concatenate([X0[sp], X1[sp]], axis=1)
+        nreps = all_reps.shape[1]
+        rep1 = X0[sp].shape[1]
+        take1 = np.random.choice(np.arange(nreps), rep1, replace=False)
+        take2 = np.array(list(set(np.arange(nreps)).difference(take1)))
+        X[mask[0]] = all_reps[:, take1, :]
+        X[mask[1]] = all_reps[:, take2, :]
+    else:
+        X[mask[0]] = X0[sp]
+        X[mask[1]] = X1[sp]
     r1 = X[mask[0]].squeeze()
     r2 = X[mask[1]].squeeze()
     result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
 
-    df = pd.DataFrame(index=["dp", "wopt", "evals", "evecs", "evecSim", "dU"],
+    # project r1 and r2 onto the optimal decoding axis, find decision boundary, count %correct labeled
+    r1proj = r1.T @ axes.T @ _result.wopt
+    r2proj = r2.T @ axes.T @ _result.wopt
+    r1u = np.mean(r1proj)
+    r2u = np.mean(r2proj)
+    dd1 = np.abs(np.concatenate([r1proj, r2proj]) - r1u)
+    dd2 = np.abs(np.concatenate([r1proj, r2proj]) - r2u)
+    tt = np.concatenate([np.zeros(r1proj.shape[0]), np.ones(r2proj.shape[0])])
+    pp = (dd1 > dd2).astype(int).squeeze()
+    percent_correct = np.mean(tt==pp)
+
+
+    df = pd.DataFrame(index=["dp", "percent_correct", "wopt", "evals", "evecs", "evecSim", "dU"],
                         data=[result.dprimeSquared,
-                              result.wopt,
+                              percent_correct,
+                              _result.wopt,
                               result.evals,
                               result.evecs,
                               result.evecSim,
@@ -264,6 +292,7 @@ output = pd.concat(output)
 
 dtypes = {
     'dp': 'float32',
+    'percent_correct': 'float32',
     'wopt': 'object',
     'evecs': 'object',
     'evals': 'object',

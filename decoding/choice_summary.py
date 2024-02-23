@@ -13,8 +13,8 @@ import numpy as np
 import nems0.db as nd
 import scipy.stats as ss
 
-catch_model = "tbpChoiceDecoding_decision.cr.ich_DRops.dim2.ddr"
-target_model = "tbpChoiceDecoding_decision.h.m_DRops.dim2.ddr"
+catch_model = "tbpChoiceDecoding_decision.cr.ich_DRops.dim2.ddr_shuffle"
+target_model = "tbpChoiceDecoding_decision.h.m_DRops.dim2.ddr_shuffle"
 
 batch = 324
 sqrt = True
@@ -54,28 +54,30 @@ target_results = pd.concat(target_results)
 
 f, ax = plt.subplots(1, 2, figsize=(6, 6), sharey=True)
 
-a1 = catch_results[catch_results.area=="A1"]["dp"]
+a1 = catch_results[catch_results.area=="A1"]["percent_correct"]
 x_a1 = np.random.normal(0, 0.1, len(a1))
 ax[0].scatter(x_a1, a1, s=10, color="k")
 
-peg = catch_results[catch_results.area=="PEG"]["dp"]
+peg = catch_results[catch_results.area=="PEG"]["percent_correct"]
 x_peg = np.random.normal(0, 0.1, len(peg)) + 1
 ax[0].scatter(x_peg, peg, s=10, color="k")
+ax[0].axhline(0.5, linestyle="--", color="grey")
 
-ax[0].set_ylabel("d-prime (choice)")
+ax[0].set_ylabel("percent correct")
 ax[0].set_xticks([0, 1])
 ax[0].set_xticklabels(["A1", "PEG"])
 ax[0].set_title("Catch stimuli")
 
-a1 = target_results[target_results.area=="A1"]["dp"]
+a1 = target_results[target_results.area=="A1"]["percent_correct"]
 x_a1 = np.random.normal(0, 0.1, len(a1))
 ax[1].scatter(x_a1, a1, s=10, color="k")
+ax[1].axhline(0.5, linestyle="--", color="grey")
 
-peg = target_results[target_results.area=="PEG"]["dp"]
+peg = target_results[target_results.area=="PEG"]["percent_correct"]
 x_peg = np.random.normal(0, 0.1, len(peg)) + 1
 ax[1].scatter(x_peg, peg, s=10, color="k")
 
-ax[1].set_ylabel("d-prime (choice)")
+ax[1].set_ylabel("percent correct")
 ax[1].set_xticks([0, 1])
 ax[1].set_xticklabels(["A1", "PEG"])
 ax[1].set_title("Target stimuli")

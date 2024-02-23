@@ -7,6 +7,8 @@ python_path = '/auto/users/hellerc/miniconda3/envs/lbhb/bin/python'
 script = "/auto/users/hellerc/code/projects/TBP-ms/decoding/do_choice_decoding.py"
 force_rerun = True
 regress_pupil = False
+shuffle = True
+
 ndim = 2
 # initial model list for testing
 modellist = [
@@ -38,6 +40,9 @@ modellist = [
     f'tbpChoiceDecoding_fs100_ws0.0_we0.45_decision.h.m_DRops.dim{ndim}.ddr',
     f'tbpChoiceDecoding_fs100_ws0.0_we0.5_decision.h.m_DRops.dim{ndim}.ddr',
 ]
+
+if shuffle:
+    modellist = [m+"_shuffle" for m in modellist]
 
 if regress_pupil:
     modellist = [m+"_PR" for m in modellist]
