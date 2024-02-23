@@ -28,8 +28,8 @@ figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig5/"
 batch = 324
 sqrt = True
 sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
-amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
-pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
 
 sites = [s for s in sites if s not in BAD_SITES]
 rra = 0
@@ -37,7 +37,7 @@ rrp = 0
 dfa = pd.DataFrame(columns=["acos_sim", "e2", "e1", "area", "site"])
 dfp = pd.DataFrame(columns=["pcos_sim", "e2", "e1", "area", "site"])
 for site in sites:
-    d = pd.read_pickle(os.path.join(RESULTS_DIR, "factor_analysis", str(batch), site, "FA_perstim.pickle"))
+    d = pd.read_pickle(os.path.join(RESULTS_DIR, "factor_analysis", str(batch), site, "FA_perstim_PR.pickle"))
     area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",)).iloc[0][0]
     
     # load decoding results

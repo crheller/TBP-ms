@@ -18,6 +18,8 @@ import os
 import nems0
 import nems0.db as nd
 import logging
+import numpy as np
+import sklearn.cluster as skc
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +48,8 @@ def parse_mask_options(op):
             mask.append("HIT_TRIAL")
         if mo=="cr":
             mask.append("CORRECT_REJECT_TRIAL")
+        if mo=="ich":
+            mask.append("INCORRECT_HIT_TRIAL")
         if mo=="m":
             mask.append("MISS_TRIAL")
         if mo=="fa":
@@ -58,25 +62,21 @@ def parse_mask_options(op):
     return mask, pup_match_active
 
 mask = []
-drmask = []
-decmask = []
 method = "unknown"
 ndims = 2
-noise = "global"
-sharedSpace = False
 factorAnalysis = False
 fa_perstim = False
 sim = None
 pup_match_active = False
 regress_pupil = False
 fa_model = "FA_perstim"
+window_start = 0.1 # by default, use the full stimulus
+window_end = 0.4 # by default, use the full stimulus
+fs = 10
+shuffle = False
 for op in modelname.split("_"):
-    if op.startswith("mask"):
+    if op.startswith("decision"):
         mask, pup_match_active = parse_mask_options(op)
-    if op.startswith("drmask"):
-        drmask, _ = parse_mask_options(op)
-    if op.startswith("decmask"):
-        decmask, _ = parse_mask_options(op)
     if op.startswith("DRops"):
         dim_reduction_options = op.split(".")
         for dro in dim_reduction_options:
@@ -84,14 +84,7 @@ for op in modelname.split("_"):
                 ndims = int(dro[3:])
             if dro.startswith("ddr"):
                 method = "dDR"
-                ddrops = dro.split("-")
-                for ddr_op in ddrops:
-                    if ddr_op == "globalNoise":
-                        noise = "global"
-                    elif ddr_op == "targetNoise":
-                        noise = "targets"
-                    elif ddr_op == "sharedSpace":
-                        sharedSpace = True
+
     if op.startswith("PR"):
         regress_pupil = True
     if op.startswith("FA"):
@@ -105,30 +98,49 @@ for op in modelname.split("_"):
         except:
             log.info("Didn't find a pupil regress FA option")
             pass
+    
+    if op.startswith("ws"):
+        window_start = float(op[2:])
+    if op.startswith("we"):
+        window_end = float(op[2:])
+    if op.startswith("fs"):
+        fs = int(op[2:])
+    if op.startswith("shuffle"):
+        shuffle = True
 
+if len(mask) != 2:
+    raise ValueError("decision mask should be len = 2. Condition 1 vs. condition 2 to be decoded (e.g. hit vs. miss)")
 
-if decmask == []:
-    # default is to compute decoding axis using the same data you're evaluating on
-    decmask = mask
-
-# STEP 3: Load data to be decoded / data to be use for decoding space definition
-X, Xp = loaders.load_tbp_for_decoding(site=site, 
+# STEP 3: Load data to be decoded
+X0, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins = window_start,
+                                    wine = window_end,
                                     collapse=True,
-                                    mask=mask,
+                                    mask=mask[0],
+                                    recache=False,
+                                    pupexclude=pup_match_active,
+                                    regresspupil=regress_pupil)
+X1, _ = loaders.load_tbp_for_decoding(site=site, 
+                                    batch=batch,
+                                    fs=fs,
+                                    wins = window_start,
+                                    wine = window_end,
+                                    collapse=True,
+                                    mask=mask[1],
                                     recache=False,
                                     pupexclude=pup_match_active,
                                     regresspupil=regress_pupil)
 
-# for null simulation, load the active PSTH regardless of current state
+# for null simulation, load the mean PSTH regardless of current state
 X_all, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins = window_start,
+                                    wine = window_end,
                                     collapse=True,
-                                    mask=["HIT_TRIAL", "CORRECT_REJECT_TRIAL", "MISS_TRIAL", "PASSIVE_EXPERIMENT"],
+                                    mask=["HIT_TRIAL", "CORRECT_REJECT_TRIAL", "MISS_TRIAL", "FALSE_ALARM_TRIAL"],
                                     recache=False,
                                     pupexclude=pup_match_active,
                                     regresspupil=regress_pupil)
@@ -143,8 +155,9 @@ X_all, _ = loaders.load_tbp_for_decoding(site=site,
 #     5 = set off-diag to zero, only change single neuron var.
 #     6 = set off-diag to zero, fix single neuorn var
 #     7 = no change (and no correlations at all)
-Xog = X.copy()
+# Xog = X.copy()
 if factorAnalysis:
+    raise NotImplementedError("Haven't implemented FA for choice decoding yet")
     # redefine X using simulated data
     if "PASSIVE_EXPERIMENT" in mask:
         state = "passive"
@@ -171,68 +184,107 @@ if factorAnalysis:
         psth = {k: v.mean(axis=1).squeeze() for k, v in X.items()}
         X = loaders.load_FA_model(site, batch, psth, state, sim=sim_method, nreps=2000)
 
-# always define the space with the raw data, for the sake of comparison
-Xd, _ = loaders.load_tbp_for_decoding(site=site, 
+# always define the space with the raw, BALANCED data, for the sake of comparison
+Xd0, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins=window_start,
+                                    wine=window_end,
                                     collapse=True,
-                                    mask=drmask,
-                                    balance=True,
+                                    mask=mask[0],
+                                    balance_choice=True,
                                     regresspupil=regress_pupil)
-Xdec, _ = loaders.load_tbp_for_decoding(site=site, 
+Xd1, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins=window_start,
+                                    wine=window_end,
                                     collapse=True,
-                                    mask=decmask,
-                                    balance=True,
+                                    mask=mask[1],
+                                    balance_choice=True,
                                     regresspupil=regress_pupil)
 
-# STEP 4: Generate list of stimulus pairs meeting min rep criteria and get the decoding space for each
-stim_pairs = list(combinations(Xog.keys(), 2))
-stim_pairs = [sp for sp in stim_pairs if (Xog[sp[0]].shape[1]>=5) & (Xog[sp[1]].shape[1]>=5) & (Xd[sp[0]].shape[1]>=5) & (Xd[sp[1]].shape[1]>=5)]
-# TODO: Add option to compute a single, fixed space for all pairs. e.g. a generic
-# target vs. catch space.
-decoding_space = decoding.get_decoding_space(Xd, stim_pairs, 
+# STEP 4: Generate list of stimuli to calculate choice decoding of (need min reps in each condition)
+# then, for each stimulus, define the dDR axes
+poss_stim = list(set(Xd0.keys()) & set(Xd1.keys()))
+all_stimuli = [s for s in poss_stim if (s.startswith("TAR") | s.startswith("CAT")) & (Xd0[s].shape[1]>=5) & (Xd1[s].shape[1]>=5)]
+
+if len(all_stimuli) == 0:
+    raise ValueError("no stimuli matching requirements")
+
+pairs = list(combinations(mask, 2))
+decoding_space = []
+for stim in all_stimuli:
+    Xdecoding = dict.fromkeys(mask)
+    Xdecoding[mask[0]] = Xd0[stim]
+    Xdecoding[mask[1]] = Xd1[stim]
+    decoding_space.append(decoding.get_decoding_space(Xdecoding, pairs, 
                                             method=method, 
-                                            noise_space=noise,
+                                            noise_space="global",
                                             ndims=ndims,
-                                            common_space=sharedSpace)
+                                            common_space=False)[0])
 
-if len(decoding_space) != len(stim_pairs):
+if len(decoding_space) != len(all_stimuli):
     raise ValueError
 
 # STEP 4.1: Save a figure of projection of targets / catches a common decoding space for this site
-fig_file = results_file(RESULTS_DIR, site, batch, modelname, "ellipse_plot.png")
-plotting.dump_ellipse_plot(site, batch, filename=fig_file, mask=drmask)
+# fig_file = results_file(RESULTS_DIR, site, batch, modelname, "ellipse_plot.png")
+# plotting.dump_ellipse_plot(site, batch, filename=fig_file, mask=drmask)
 
-# STEP 5: Loop over stimulus pairs and perform decoding
+# STEP 5: Loop over stimuli and perform choice decoding
 output = []
-for sp, axes in zip(stim_pairs, decoding_space):
+for sp, axes in zip(all_stimuli, decoding_space):
     # first, get decoding axis for this stim pair
-    # TODO: Add specialty option for generic target vs. catch decoding space.
-    _r1 = Xdec[sp[0]][:, :, 0]
-    _r2 = Xdec[sp[1]][:, :, 0]
+    Xdecoding = dict.fromkeys(mask)    
+    Xdecoding[mask[0]] = Xd0[sp]
+    Xdecoding[mask[1]] = Xd1[sp]
+
+    _r1 = Xdecoding[mask[0]][:, :, 0]
+    _r2 = Xdecoding[mask[1]][:, :, 0]
     _result = decoding.do_decoding(_r1, _r2, axes)
     
-    r1 = X[sp[0]].squeeze()
-    r2 = X[sp[1]].squeeze()
+    # then do decoding on this axis (with the potentially unbalanced data)
+    X = dict.fromkeys(mask)
+    if shuffle:
+        all_reps = np.concatenate([X0[sp], X1[sp]], axis=1)
+        nreps = all_reps.shape[1]
+        rep1 = X0[sp].shape[1]
+        take1 = np.random.choice(np.arange(nreps), rep1, replace=False)
+        take2 = np.array(list(set(np.arange(nreps)).difference(take1)))
+        X[mask[0]] = all_reps[:, take1, :]
+        X[mask[1]] = all_reps[:, take2, :]
+    else:
+        X[mask[0]] = X0[sp]
+        X[mask[1]] = X1[sp]
+    r1 = X[mask[0]].squeeze()
+    r2 = X[mask[1]].squeeze()
     result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
-    pair_category = decoding.get_category(sp[0], sp[1])
 
-    df = pd.DataFrame(index=["dp", "wopt", "evals", "evecs", "evecSim", "dU"],
+    # project r1 and r2 onto the optimal decoding axis, find decision boundary, count %correct labeled
+    r1proj = r1.T @ axes.T @ _result.wopt
+    r2proj = r2.T @ axes.T @ _result.wopt
+    r1u = np.mean(r1proj)
+    r2u = np.mean(r2proj)
+    dd1 = np.abs(np.concatenate([r1proj, r2proj]) - r1u)
+    dd2 = np.abs(np.concatenate([r1proj, r2proj]) - r2u)
+    tt = np.concatenate([np.zeros(r1proj.shape[0]), np.ones(r2proj.shape[0])])
+    pp = (dd1 > dd2).astype(int).squeeze()
+    percent_correct = np.mean(tt==pp)
+
+
+    df = pd.DataFrame(index=["dp", "percent_correct", "wopt", "evals", "evecs", "evecSim", "dU"],
                         data=[result.dprimeSquared,
-                              result.wopt,
+                              percent_correct,
+                              _result.wopt,
                               result.evals,
                               result.evecs,
                               result.evecSim,
                               result.dU]
                             ).T
-    df["class"] = pair_category
-    df["e1"] = sp[0]
-    df["e2"] = sp[1]
+    df["e1"] = mask[0]
+    df["e2"] = mask[1]
     df["dr_loadings"] = [axes]
+    df["stimulus"] = sp
 
     output.append(df)
 
@@ -240,6 +292,7 @@ output = pd.concat(output)
 
 dtypes = {
     'dp': 'float32',
+    'percent_correct': 'float32',
     'wopt': 'object',
     'evecs': 'object',
     'evals': 'object',
@@ -248,7 +301,7 @@ dtypes = {
     'e1': 'object',
     'e2': 'object',
     "dr_loadings": "object",
-    'class': 'object',
+    "stimulus": "object"
     }
 output = output.astype(dtypes)
 
