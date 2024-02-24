@@ -133,18 +133,6 @@ X1, _ = loaders.load_tbp_for_decoding(site=site,
                                     pupexclude=pup_match_active,
                                     regresspupil=regress_pupil)
 
-# for null simulation, load the mean PSTH regardless of current state
-X_all, _ = loaders.load_tbp_for_decoding(site=site, 
-                                    batch=batch,
-                                    fs=fs,
-                                    wins = window_start,
-                                    wine = window_end,
-                                    collapse=True,
-                                    mask=["HIT_TRIAL", "CORRECT_REJECT_TRIAL", "MISS_TRIAL", "FALSE_ALARM_TRIAL"],
-                                    recache=False,
-                                    pupexclude=pup_match_active,
-                                    regresspupil=regress_pupil)
-
 # sim:
 #     0 = no change (null) model
 #     1 = change in gain only
@@ -155,30 +143,39 @@ X_all, _ = loaders.load_tbp_for_decoding(site=site,
 #     5 = set off-diag to zero, only change single neuron var.
 #     6 = set off-diag to zero, fix single neuorn var
 #     7 = no change (and no correlations at all)
-# Xog = X.copy()
-if factorAnalysis:
-    raise NotImplementedError("Haven't implemented FA for choice decoding yet")
-    # redefine X using simulated data
-    if "PASSIVE_EXPERIMENT" in mask:
-        state = "passive"
-    else:
-        state = "active"
+Xog0 = X0.copy()
+Xog1 = X1.copy()
+if factorAnalysis:    
+    raise ValueError("FA simulation for choice decoding is a WIP")
+    # redefine X0 and X1 by simulating response data
     if fa_perstim:
         log.info(f"Loading factor analysis results from {fa_model}")
         if sim_method==0:
-            log.info("Fixing PSTH between active / passive to active")
-            keep = [k for k in X_all.keys() if ("TAR_" in k) | ("CAT_" in k)]
-            X_all = {k: v for k, v in X_all.items() if k in keep}
-            psth = {k: v.mean(axis=1).squeeze() for k, v in X_all.items()}
-            Xog = {k: v for k, v in X_all.items() if k in X.keys()}
+            log.info("Fixing PSTH between decisions to correct decision")
+            if mask[0] == "HIT_TRIAL":
+                keep = [k for k in X0.keys() if ("TAR_" in k)]
+                X0 = {k: v for k, v in X0.items() if k in keep}
+                psth0 = {k: v.mean(axis=1).squeeze() for k, v in X0.items()}
+                # get X1 / psth1 (the same as X0 for sim==0)
+ 
+            elif mask[0] == "CORRECT_REJECT_TRIAL":
+                keep = [k for k in X0.keys() if ("CAT_" in k)]
+                X0 = {k: v for k, v in X0.items() if k in keep}
+                psth0 = {k: v.mean(axis=1).squeeze() for k, v in X0.items()}
+                # get X1 / psth1 (the same as X0 for sim==0)
+            else:
+                raise ValueError(f"{mask[0]} cannot be the first trial type")
         else:
+            # allow X / psth to change between the decision types
             keep = [k for k in Xog.keys() if ("TAR_" in k) | ("CAT_" in k)]
             Xog = {k: v for k, v in Xog.items() if k in keep}
             psth = {k: v.mean(axis=1).squeeze() for k, v in Xog.items()}
             Xog = {k: v for k, v in Xog.items() if k in X.keys()}
 
         log.info("Loading FA simulation using per stimulus results")
-        X = loaders.load_FA_model_perstim(site, batch, psth, state, fa_model=fa_model, sim=sim_method, nreps=2000)
+        X0 = loaders.load_FA_model_perstim(site, batch, psth, mask[0], fa_model=fa_model, sim=sim_method, nreps=2000)
+        X1 = loaders.load_FA_model_perstim(site, batch, psth, mask[1], fa_model=fa_model, sim=sim_method, nreps=2000)
+    
     else:
         log.info("Loading FA simulation")
         psth = {k: v.mean(axis=1).squeeze() for k, v in X.items()}
