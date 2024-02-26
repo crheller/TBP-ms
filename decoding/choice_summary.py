@@ -13,8 +13,8 @@ import numpy as np
 import nems0.db as nd
 import scipy.stats as ss
 
-catch_model = "tbpChoiceDecoding_decision.cr.ich_DRops.dim2.ddr_shuffle"
-target_model = "tbpChoiceDecoding_decision.h.m_DRops.dim2.ddr_shuffle"
+catch_model = "tbpChoiceDecoding_decision.cr.ich_DRops.dim2.ddr"
+target_model = "tbpChoiceDecoding_decision.h.m_DRops.dim2.ddr"
 
 batch = 324
 sqrt = True
@@ -67,6 +67,8 @@ ax[0].set_ylabel("percent correct")
 ax[0].set_xticks([0, 1])
 ax[0].set_xticklabels(["A1", "PEG"])
 ax[0].set_title("Catch stimuli")
+
+ax[0].set_ylim((0.45, 1.0))
 
 a1 = target_results[target_results.area=="A1"]["percent_correct"]
 x_a1 = np.random.normal(0, 0.1, len(a1))

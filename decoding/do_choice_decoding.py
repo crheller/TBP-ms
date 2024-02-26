@@ -243,30 +243,77 @@ for sp, axes in zip(all_stimuli, decoding_space):
     # then do decoding on this axis (with the potentially unbalanced data)
     X = dict.fromkeys(mask)
     if shuffle:
-        all_reps = np.concatenate([X0[sp], X1[sp]], axis=1)
-        nreps = all_reps.shape[1]
-        rep1 = X0[sp].shape[1]
-        take1 = np.random.choice(np.arange(nreps), rep1, replace=False)
-        take2 = np.array(list(set(np.arange(nreps)).difference(take1)))
-        X[mask[0]] = all_reps[:, take1, :]
-        X[mask[1]] = all_reps[:, take2, :]
+        # if shuffling, run 1000 times to get mean across shuffles
+        # keep mean dprime and mean percent correct.
+        # for the rest of "results", just save the last shuffle result
+        pc = []
+        dprime = []
+        for sidx in range(1000):
+            all_reps = np.concatenate([X0[sp], X1[sp]], axis=1)
+            nreps = all_reps.shape[1]
+            rep1 = X0[sp].shape[1]
+            take1 = np.random.choice(np.arange(nreps), rep1, replace=False)
+            take2 = np.array(list(set(np.arange(nreps)).difference(take1)))
+            X[mask[0]] = all_reps[:, take1, :]
+            X[mask[1]] = all_reps[:, take2, :]
+
+            r1 = X[mask[0]].squeeze()
+            r2 = X[mask[1]].squeeze()
+            result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
+
+            # project r1 and r2 onto the optimal decoding axis, find decision boundary, count %correct labeled
+            # very important to do cross validation here, otherwise percent correct calc is circular
+            r1proj = r1.T @ axes.T @ _result.wopt
+            r2proj = r2.T @ axes.T @ _result.wopt
+            # leave-one-out cross validation 
+            all_data = np.concatenate([r1proj, r2proj])
+            labels = np.concatenate([np.zeros((r1proj.shape[0])), np.ones((r2proj.shape[0]))])
+            pred_lab = np.zeros((labels.shape[0]))
+            for i in range(r1proj.shape[0]+r2proj.shape[0]):
+                fit = np.array(list(set(np.arange(all_data.shape[0])).difference(set([i]))))
+                _labels = labels[fit]
+                _data = all_data[fit]
+                r1u = np.mean(_data[_labels==0])
+                r2u = np.mean(_data[_labels==1])
+                if (abs(all_data[i]-r1u)) < (abs(all_data[i]-r2u)):
+                    pred_lab[i] = 0
+                else:
+                    pred_lab[i] = 1
+            percent_correct = np.mean(labels==pred_lab)
+            dprime.append(result.dprimeSquared)
+            pc.append(percent_correct)
+        
+        percent_correct = np.mean(pc)
+        result._replace(dprimeSquared = np.mean(dprime))
+
     else:
+        # if not shuffling, just run this one time
         X[mask[0]] = X0[sp]
         X[mask[1]] = X1[sp]
-    r1 = X[mask[0]].squeeze()
-    r2 = X[mask[1]].squeeze()
-    result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
+    
+        r1 = X[mask[0]].squeeze()
+        r2 = X[mask[1]].squeeze()
+        result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
 
-    # project r1 and r2 onto the optimal decoding axis, find decision boundary, count %correct labeled
-    r1proj = r1.T @ axes.T @ _result.wopt
-    r2proj = r2.T @ axes.T @ _result.wopt
-    r1u = np.mean(r1proj)
-    r2u = np.mean(r2proj)
-    dd1 = np.abs(np.concatenate([r1proj, r2proj]) - r1u)
-    dd2 = np.abs(np.concatenate([r1proj, r2proj]) - r2u)
-    tt = np.concatenate([np.zeros(r1proj.shape[0]), np.ones(r2proj.shape[0])])
-    pp = (dd1 > dd2).astype(int).squeeze()
-    percent_correct = np.mean(tt==pp)
+        # project r1 and r2 onto the optimal decoding axis, find decision boundary, count %correct labeled
+        # very important to do cross validation here, otherwise percent correct calc is circular
+        r1proj = r1.T @ axes.T @ _result.wopt
+        r2proj = r2.T @ axes.T @ _result.wopt
+        # leave-one-out cross validation 
+        all_data = np.concatenate([r1proj, r2proj])
+        labels = np.concatenate([np.zeros((r1proj.shape[0])), np.ones((r2proj.shape[0]))])
+        pred_lab = np.zeros((labels.shape[0]))
+        for i in range(r1proj.shape[0]+r2proj.shape[0]):
+            fit = np.array(list(set(np.arange(all_data.shape[0])).difference(set([i]))))
+            _labels = labels[fit]
+            _data = all_data[fit]
+            r1u = np.mean(_data[_labels==0])
+            r2u = np.mean(_data[_labels==1])
+            if (abs(all_data[i]-r1u)) < (abs(all_data[i]-r2u)):
+                pred_lab[i] = 0
+            else:
+                pred_lab[i] = 1
+        percent_correct = np.mean(labels==pred_lab)
 
 
     df = pd.DataFrame(index=["dp", "percent_correct", "wopt", "evals", "evecs", "evecSim", "dU"],

@@ -11,6 +11,7 @@ shuffle = True
 
 ndim = 2
 # initial model list for testing
+# cummulative windows
 modellist = [
     ## Catch choice decoding
     f'tbpChoiceDecoding_decision.cr.ich_DRops.dim{ndim}.ddr',
@@ -39,6 +40,33 @@ modellist = [
     f'tbpChoiceDecoding_fs100_ws0.0_we0.4_decision.h.m_DRops.dim{ndim}.ddr',
     f'tbpChoiceDecoding_fs100_ws0.0_we0.45_decision.h.m_DRops.dim{ndim}.ddr',
     f'tbpChoiceDecoding_fs100_ws0.0_we0.5_decision.h.m_DRops.dim{ndim}.ddr',
+]
+
+# sliding windows
+modellist = [
+    ## Catch choice decoding
+    # sliding window
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.1_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.05_we0.15_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.1_we0.2_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.15_we0.25_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.2_we0.3_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.25_we0.35_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.3_we0.4_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.35_we0.45_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.4_we0.5_decision.cr.ich_DRops.dim{ndim}.ddr',
+
+    ## Target choice decoding
+    # sliding window
+    f'tbpChoiceDecoding_fs100_ws0.0_we0.1_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.05_we0.15_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.1_we0.2_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.15_we0.25_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.2_we0.3_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.25_we0.35_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.3_we0.4_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.35_we0.45_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs100_ws0.4_we0.5_decision.h.m_DRops.dim{ndim}.ddr',
 ]
 
 if shuffle:
