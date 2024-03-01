@@ -19,7 +19,7 @@ import nems0
 import nems0.db as nd
 import logging
 import numpy as np
-import sklearn.cluster as skc
+np.random.seed(123)
 
 log = logging.getLogger(__name__)
 
@@ -69,7 +69,8 @@ fa_perstim = False
 sim = None
 pup_match_active = False
 regress_pupil = False
-fa_model = "FA_perstim"
+trial_epoch = False
+fa_model = "FA_perstim_choice"
 window_start = 0.1 # by default, use the full stimulus
 window_end = 0.4 # by default, use the full stimulus
 fs = 10
@@ -92,11 +93,11 @@ for op in modelname.split("_"):
         sim_method = int(op.split(".")[1])
         fa_perstim = op.split(".")[0][2:]=="perstim"
         try:
-            log.info("Using pupil regressed FA models")
             if op.split(".")[2]=="PR":
                 fa_model = "FA_perstim_PR"
+                log.info("Using pupil regressed FA models")
         except:
-            log.info("Didn't find a pupil regress FA option")
+            log.info("Using raw (not pupil regressed) FA fit")
             pass
     
     if op.startswith("ws"):
@@ -107,6 +108,8 @@ for op in modelname.split("_"):
         fs = int(op[2:])
     if op.startswith("shuffle"):
         shuffle = True
+    if op.startswith("trial"):
+        trial_epoch = True
 
 if len(mask) != 2:
     raise ValueError("decision mask should be len = 2. Condition 1 vs. condition 2 to be decoded (e.g. hit vs. miss)")
@@ -115,21 +118,23 @@ if len(mask) != 2:
 X0, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     fs=fs,
-                                    wins = window_start,
-                                    wine = window_end,
+                                    wins=window_start,
+                                    wine=window_end,
                                     collapse=True,
                                     mask=mask[0],
                                     recache=False,
+                                    get_full_trials=trial_epoch,
                                     pupexclude=pup_match_active,
                                     regresspupil=regress_pupil)
 X1, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
                                     fs=fs,
-                                    wins = window_start,
-                                    wine = window_end,
+                                    wins=window_start,
+                                    wine=window_end,
                                     collapse=True,
                                     mask=mask[1],
                                     recache=False,
+                                    get_full_trials=trial_epoch,
                                     pupexclude=pup_match_active,
                                     regresspupil=regress_pupil)
 
@@ -146,7 +151,7 @@ X1, _ = loaders.load_tbp_for_decoding(site=site,
 Xog0 = X0.copy()
 Xog1 = X1.copy()
 if factorAnalysis:    
-    raise ValueError("FA simulation for choice decoding is a WIP")
+    # raise ValueError("FA simulation for choice decoding is a WIP")
     # redefine X0 and X1 by simulating response data
     if fa_perstim:
         log.info(f"Loading factor analysis results from {fa_model}")
@@ -157,29 +162,41 @@ if factorAnalysis:
                 X0 = {k: v for k, v in X0.items() if k in keep}
                 psth0 = {k: v.mean(axis=1).squeeze() for k, v in X0.items()}
                 # get X1 / psth1 (the same as X0 for sim==0)
- 
+                X1 = {k: v for k, v in X0.items() if k in keep}
+                psth1 = {k: v.mean(axis=1).squeeze() for k, v in X0.items()}
             elif mask[0] == "CORRECT_REJECT_TRIAL":
                 keep = [k for k in X0.keys() if ("CAT_" in k)]
                 X0 = {k: v for k, v in X0.items() if k in keep}
                 psth0 = {k: v.mean(axis=1).squeeze() for k, v in X0.items()}
                 # get X1 / psth1 (the same as X0 for sim==0)
+                X1 = {k: v for k, v in X0.items() if k in keep}
+                psth1 = {k: v.mean(axis=1).squeeze() for k, v in X0.items()}
             else:
                 raise ValueError(f"{mask[0]} cannot be the first trial type")
         else:
+            log.info("Allow PSTH to change between decisions")
             # allow X / psth to change between the decision types
-            keep = [k for k in Xog.keys() if ("TAR_" in k) | ("CAT_" in k)]
-            Xog = {k: v for k, v in Xog.items() if k in keep}
-            psth = {k: v.mean(axis=1).squeeze() for k, v in Xog.items()}
-            Xog = {k: v for k, v in Xog.items() if k in X.keys()}
+            if mask[0] == "HIT_TRIAL":
+                keep = [k for k in X0.keys() if ("TAR_" in k)]
+                X0 = {k: v for k, v in X0.items() if k in keep}
+                psth0 = {k: v.mean(axis=1).squeeze() for k, v in X0.items()}
+                X1 = {k: v for k, v in X1.items() if k in keep}
+                psth1 = {k: v.mean(axis=1).squeeze() for k, v in X1.items()}
+            elif mask[0] == "CORRECT_REJECT_TRIAL":
+                keep = [k for k in X0.keys() if ("CAT_" in k)]
+                X0 = {k: v for k, v in X0.items() if k in keep}
+                psth0 = {k: v.mean(axis=1).squeeze() for k, v in X0.items()}
+                X1 = {k: v for k, v in X1.items() if k in keep}
+                psth1 = {k: v.mean(axis=1).squeeze() for k, v in X1.items()}
+            else:
+                raise ValueError(f"{mask[0]} cannot be the first trial type")
 
         log.info("Loading FA simulation using per stimulus results")
-        X0 = loaders.load_FA_model_perstim(site, batch, psth, mask[0], fa_model=fa_model, sim=sim_method, nreps=2000)
-        X1 = loaders.load_FA_model_perstim(site, batch, psth, mask[1], fa_model=fa_model, sim=sim_method, nreps=2000)
+        X0 = loaders.load_choice_FA_model(site, batch, psth0, mask[0], fa_model=fa_model, sim=sim_method, nreps=2000)
+        X1 = loaders.load_choice_FA_model(site, batch, psth1, mask[1], fa_model=fa_model, sim=sim_method, nreps=2000)
     
     else:
-        log.info("Loading FA simulation")
-        psth = {k: v.mean(axis=1).squeeze() for k, v in X.items()}
-        X = loaders.load_FA_model(site, batch, psth, state, sim=sim_method, nreps=2000)
+        raise ValueError("No 'overall' FA fit for choice decoding")
 
 # always define the space with the raw, BALANCED data, for the sake of comparison
 Xd0, _ = loaders.load_tbp_for_decoding(site=site, 
@@ -189,6 +206,7 @@ Xd0, _ = loaders.load_tbp_for_decoding(site=site,
                                     wine=window_end,
                                     collapse=True,
                                     mask=mask[0],
+                                    get_full_trials=trial_epoch,
                                     balance_choice=True,
                                     regresspupil=regress_pupil)
 Xd1, _ = loaders.load_tbp_for_decoding(site=site, 
@@ -198,13 +216,14 @@ Xd1, _ = loaders.load_tbp_for_decoding(site=site,
                                     wine=window_end,
                                     collapse=True,
                                     mask=mask[1],
+                                    get_full_trials=trial_epoch,
                                     balance_choice=True,
                                     regresspupil=regress_pupil)
 
 # STEP 4: Generate list of stimuli to calculate choice decoding of (need min reps in each condition)
 # then, for each stimulus, define the dDR axes
 poss_stim = list(set(Xd0.keys()) & set(Xd1.keys()))
-all_stimuli = [s for s in poss_stim if (s.startswith("TAR") | s.startswith("CAT")) & (Xd0[s].shape[1]>=5) & (Xd1[s].shape[1]>=5)]
+all_stimuli = [s for s in poss_stim if (("TAR" in s) | ("CAT" in s)) & (Xd0[s].shape[1]>=5) & (Xd1[s].shape[1]>=5)]
 
 if len(all_stimuli) == 0:
     raise ValueError("no stimuli matching requirements")

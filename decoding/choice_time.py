@@ -124,14 +124,20 @@ a1_target_0 = []
 peg_target_0 = []
 a1_target_5 = []
 peg_target_5 = []
-a1_target_pc = []
-peg_target_pc = []
+a1_target_pc_inf = []
+peg_target_pc_inf = []
+a1_target_pc_0 = []
+peg_target_pc_0 = []
+a1_target_pc_5 = []
+peg_target_pc_5 = []
 for site in sites:
     try:
         dprimes_inf = []
         dprimes_0 = []
         dprimes_5 = []
-        pc = []
+        pc_inf = []
+        pc_0 = []
+        pc_5 = []
         for twin in twindows:
             model = target_model.replace("Decoding_fs100_", f"Decoding_fs100_{twin}_")
             res = pd.read_pickle(results_file(RESULTS_DIR, site, batch, model, "output.pickle"))    
@@ -145,37 +151,43 @@ for site in sites:
             dbmask_inf =  res["stimulus"].str.contains("InfdB").values
             if sum(dbmask_inf)==1:
                 dprimes_inf.append(res["dp"].values[dbmask_inf][0])
-                pc.append(res["percent_correct"].values[dbmask_inf][0])
+                pc_inf.append(res["percent_correct"].values[dbmask_inf][0])
             else:
                 dprimes_inf.append(np.nan)
-                pc.append(np.nan)
+                pc_inf.append(np.nan)
 
             dbmask_0 =  res["stimulus"].str.contains("\+0dB").values
             if sum(dbmask_0)==1:
                 dprimes_0.append(res["dp"].values[dbmask_0][0])
+                pc_0.append(res["percent_correct"].values[dbmask_0][0])
             else:
                 dprimes_0.append(np.nan)
-                pc.append(np.nan)
+                pc_0.append(np.nan)
 
             dbmask_5 =  res["stimulus"].str.contains("\-5dB").values
             if sum(dbmask_5)==1:
                 dprimes_5.append(res["dp"].values[dbmask_5][0])
+                pc_5.append(res["percent_correct"].values[dbmask_5][0])
             else:
                 dprimes_5.append(np.nan)
-                pc.append(np.nan)
+                pc_5.append(np.nan)
 
         if area=="A1":
             a1_target_inf.append(dprimes_inf) # / np.max(dprimes))
             a1_target_0.append(dprimes_0)
             a1_target_5.append(dprimes_5)
 
-            a1_target_pc.append(pc)
+            a1_target_pc_inf.append(pc_inf)
+            a1_target_pc_0.append(pc_0)
+            a1_target_pc_5.append(pc_5)
         else:
             peg_target_inf.append(dprimes_inf) # / np.max(dprimes))
             peg_target_0.append(dprimes_0)
             peg_target_5.append(dprimes_5)
 
-            peg_target_pc.append(pc)
+            peg_target_pc_inf.append(pc_inf)
+            peg_target_pc_0.append(pc_0)
+            peg_target_pc_5.append(pc_5)
     except:
         print(f"model didn't exsit for site {site}. Prob too few reps")
 
@@ -185,8 +197,14 @@ a1_target_0 = np.stack(a1_target_0)
 peg_target_0 = np.stack(peg_target_0)
 a1_target_5 = np.stack(a1_target_5)
 peg_target_5 = np.stack(peg_target_5)
-# a1_target_pc = np.stack(a1_target_pc)
-# peg_target_pc = np.stack(peg_target_pc)
+
+a1_target_pc_inf = np.stack(a1_target_pc_inf)
+peg_target_pc_inf = np.stack(peg_target_pc_inf)
+a1_target_pc_0 = np.stack(a1_target_pc_0)
+peg_target_pc_0 = np.stack(peg_target_pc_0)
+a1_target_pc_5 = np.stack(a1_target_pc_5)
+peg_target_pc_5 = np.stack(peg_target_pc_5)
+
 
 
 # plot single datasets
@@ -256,7 +274,7 @@ f.tight_layout()
 
 ## LINE PLOT VERSION OF THE ABOVE HEATMAP
 # smooth the data?
-sigma = 0.1
+sigma = 1.2
 a1t_inf_smooth = sd.gaussian_filter1d(a1_target_inf, sigma, axis=1)
 a1t_0_smooth = sd.gaussian_filter1d(a1_target_0, sigma, axis=1)
 a1t_5_smooth = sd.gaussian_filter1d(a1_target_5, sigma, axis=1)
@@ -325,4 +343,109 @@ for a in ax:
 ax[2].legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
 
 f.suptitle("PEG")
+f.tight_layout()
+
+
+# summary version of the line plots
+a1_cmap = plt.get_cmap("Blues", 5)
+peg_cmap = plt.get_cmap("Oranges", 5)
+
+f, ax = plt.subplots(2, 2, figsize=(6, 5), sharex=True)
+
+amax = []
+ax[0, 0].set_title("A1")
+for (i, (a1_data, snr)) in enumerate(zip([a1t_inf_smooth, a1t_0_smooth, a1t_5_smooth], ["inf", "0dB", "-5dB"])):
+    for j in range(a1_data.shape[0]):
+        if np.isfinite(a1_data[j, 0]):
+            ax[0, 0].plot(a1_data[j, :], color=a1_cmap(i+2), lw=0.5, zorder=-1)
+    ax[0, 0].plot(np.nanmean(a1_data, axis=0), color=a1_cmap(i+2), lw=2, zorder=0, label=snr)
+    amax += list(np.argmax(a1_data, axis=1)[np.isfinite(a1_data[:, 0])])
+ax[1, 0].hist(amax, color="royalblue", edgecolor="k", 
+                histtype="stepfilled", zorder=0, bins=np.arange(0, 10, step=1), align="left")
+
+pmax = []
+ax[0, 1].set_title("PEG")
+for (i, (peg_data, snr)) in enumerate(zip([pegt_inf_smooth, pegt_0_smooth, pegt_5_smooth], ["inf", "0dB", "-5dB"])):
+    for j in range(peg_data.shape[0]):
+        if np.isfinite(peg_data[j, 0]):
+            ax[0, 1].plot(peg_data[j, :], color=peg_cmap(i+2), lw=0.5, zorder=-1)
+    ax[0, 1].plot(np.nanmean(peg_data, axis=0), color=peg_cmap(i+2), lw=2, zorder=0, label=snr)
+    pmax += list(np.argmax(peg_data, axis=1)[np.isfinite(peg_data[:, 0])])
+ax[1, 1].hist(pmax, color="tab:orange", edgecolor="k", 
+                histtype="stepfilled", zorder=0, bins=np.arange(0, 10, step=1), align="left")
+
+for a in ax.flatten():
+    a.axvline(3.5, color="k")
+    a.axvspan(0.5, 4.5, color="grey", alpha=0.3, lw=0, zorder=-1)
+    a.set_xticks(np.arange(0, len(twindows), step=2)+0.5)
+    a.set_xticklabels(np.round(np.arange(0.1, 0.6, step=0.1), 2))
+
+for a in [ax[0, 0], ax[0, 1]]:
+    a.set_ylabel("d-prime")
+    ax[0, 0].legend(frameon=False, bbox_to_anchor=(0, 1), loc="lower left")
+    ax[0, 1].legend(frameon=False, bbox_to_anchor=(0, 1), loc="lower left")
+    a.set_xlabel("Time (s)")
+
+for a in [ax[1, 0], ax[1, 1]]:
+    a.set_ylabel("count")
+    a.set_xlabel("Time of peak d-prime (s)")
+
+
+f.tight_layout()
+
+
+
+# summary version of the line plots using "choice prob."
+sigma = 1.2
+a1t_inf_smooth_pc = sd.gaussian_filter1d(a1_target_pc_inf, sigma, axis=1)
+a1t_0_smooth_pc = sd.gaussian_filter1d(a1_target_pc_0, sigma, axis=1)
+a1t_5_smooth_pc = sd.gaussian_filter1d(a1_target_pc_5, sigma, axis=1)
+pegt_inf_smooth_pc = sd.gaussian_filter1d(peg_target_pc_inf, sigma, axis=1)
+pegt_0_smooth_pc = sd.gaussian_filter1d(peg_target_pc_0, sigma, axis=1)
+pegt_5_smooth_pc = sd.gaussian_filter1d(peg_target_pc_5, sigma, axis=1)
+
+a1_cmap = plt.get_cmap("Blues", 5)
+peg_cmap = plt.get_cmap("Oranges", 5)
+
+f, ax = plt.subplots(2, 2, figsize=(6, 5), sharex=True)
+
+amax = []
+ax[0, 0].set_title("A1")
+for (i, (a1_data, snr)) in enumerate(zip([a1t_inf_smooth_pc, a1t_0_smooth_pc, a1t_5_smooth_pc], ["inf", "0dB", "-5dB"])):
+    for j in range(a1_data.shape[0]):
+        if np.isfinite(a1_data[j, 0]):
+            ax[0, 0].plot(a1_data[j, :], color=a1_cmap(i+2), lw=0.5, zorder=-1)
+    ax[0, 0].plot(np.nanmean(a1_data, axis=0), color=a1_cmap(i+2), lw=2, zorder=0, label=snr)
+    amax += list(np.argmax(a1_data, axis=1)[np.isfinite(a1_data[:, 0])])
+ax[1, 0].hist(amax, color="royalblue", edgecolor="k", 
+                histtype="stepfilled", zorder=0, bins=np.arange(0, 10, step=1), align="left")
+
+pmax = []
+ax[0, 1].set_title("PEG")
+for (i, (peg_data, snr)) in enumerate(zip([pegt_inf_smooth_pc, pegt_0_smooth_pc, pegt_5_smooth_pc], ["inf", "0dB", "-5dB"])):
+    for j in range(peg_data.shape[0]):
+        if np.isfinite(peg_data[j, 0]):
+            ax[0, 1].plot(peg_data[j, :], color=peg_cmap(i+2), lw=0.5, zorder=-1)
+    ax[0, 1].plot(np.nanmean(peg_data, axis=0), color=peg_cmap(i+2), lw=2, zorder=0, label=snr)
+    pmax += list(np.argmax(peg_data, axis=1)[np.isfinite(peg_data[:, 0])])
+ax[1, 1].hist(pmax, color="tab:orange", edgecolor="k", 
+                histtype="stepfilled", zorder=0, bins=np.arange(0, 10, step=1), align="left")
+
+for a in ax.flatten():
+    a.axvline(3.5, color="k")
+    a.axvspan(0.5, 4.5, color="grey", alpha=0.3, lw=0, zorder=-1)
+    a.set_xticks(np.arange(0, len(twindows), step=2)+0.5)
+    a.set_xticklabels(np.round(np.arange(0.1, 0.6, step=0.1), 2))
+
+for a in [ax[0, 0], ax[0, 1]]:
+    a.set_ylabel("percent correct")
+    a.legend(frameon=False, bbox_to_anchor=(0, 1), loc="lower left")
+    a.set_ylim((0.65, 1.0))
+    a.set_xlabel("Time (s)")
+
+for a in [ax[1, 0], ax[1, 1]]:
+    a.set_ylabel("count")
+    a.set_xlabel("Time of peak choice prob. (s)")
+
+
 f.tight_layout()
