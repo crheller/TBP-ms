@@ -70,6 +70,7 @@ sim = None
 pup_match_active = False
 regress_pupil = False
 trial_epoch = False
+from_trial_start = False
 fa_model = "FA_perstim_choice"
 window_start = 0.1 # by default, use the full stimulus
 window_end = 0.4 # by default, use the full stimulus
@@ -109,7 +110,9 @@ for op in modelname.split("_"):
     if op.startswith("shuffle"):
         shuffle = True
     if op.startswith("trial"):
-        trial_epoch = True
+        trial_epoch = True # default for trial based is to reference from the target
+    if op.startswith("fromfirst"):
+        from_trial_start = True # as a control, reference from the trial start (should be chance level at some point???)
 
 if len(mask) != 2:
     raise ValueError("decision mask should be len = 2. Condition 1 vs. condition 2 to be decoded (e.g. hit vs. miss)")
@@ -124,6 +127,7 @@ X0, _ = loaders.load_tbp_for_decoding(site=site,
                                     mask=mask[0],
                                     recache=False,
                                     get_full_trials=trial_epoch,
+                                    from_trial_start=from_trial_start,
                                     pupexclude=pup_match_active,
                                     regresspupil=regress_pupil)
 X1, _ = loaders.load_tbp_for_decoding(site=site, 
@@ -135,6 +139,7 @@ X1, _ = loaders.load_tbp_for_decoding(site=site,
                                     mask=mask[1],
                                     recache=False,
                                     get_full_trials=trial_epoch,
+                                    from_trial_start=from_trial_start,
                                     pupexclude=pup_match_active,
                                     regresspupil=regress_pupil)
 
@@ -207,6 +212,7 @@ Xd0, _ = loaders.load_tbp_for_decoding(site=site,
                                     collapse=True,
                                     mask=mask[0],
                                     get_full_trials=trial_epoch,
+                                    from_trial_start=from_trial_start,
                                     balance_choice=True,
                                     regresspupil=regress_pupil)
 Xd1, _ = loaders.load_tbp_for_decoding(site=site, 
@@ -217,6 +223,7 @@ Xd1, _ = loaders.load_tbp_for_decoding(site=site,
                                     collapse=True,
                                     mask=mask[1],
                                     get_full_trials=trial_epoch,
+                                    from_trial_start=from_trial_start,
                                     balance_choice=True,
                                     regresspupil=regress_pupil)
 
@@ -307,31 +314,70 @@ for sp, axes in zip(all_stimuli, decoding_space):
 
     else:
         # if not shuffling, just run this one time
+        # X[mask[0]] = X0[sp]
+        # X[mask[1]] = X1[sp]
+    
+        # r1 = X[mask[0]].squeeze()
+        # r2 = X[mask[1]].squeeze()
+        # result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
+
+        # # project r1 and r2 onto the optimal decoding axis, find decision boundary, count %correct labeled
+        # # very important to do cross validation here, otherwise percent correct calc is circular
+        # r1proj = r1.T @ axes.T @ _result.wopt
+        # r2proj = r2.T @ axes.T @ _result.wopt
+        # # leave-one-out cross validation 
+        # all_data = np.concatenate([r1proj, r2proj])
+        # labels = np.concatenate([np.zeros((r1proj.shape[0])), np.ones((r2proj.shape[0]))])
+        # pred_lab = np.zeros((labels.shape[0]))
+        # for i in range(r1proj.shape[0]+r2proj.shape[0]):
+        #     fit = np.array(list(set(np.arange(all_data.shape[0])).difference(set([i]))))
+        #     _labels = labels[fit]
+        #     _data = all_data[fit]
+        #     r1u = np.mean(_data[_labels==0])
+        #     r2u = np.mean(_data[_labels==1])
+        #     if (abs(all_data[i]-r1u)) < (abs(all_data[i]-r2u)):
+        #         pred_lab[i] = 0
+        #     else:
+        #         pred_lab[i] = 1
+        # percent_correct = np.mean(labels==pred_lab)
+
+        # ====== ALTERNATE APPROACH TO COMMENTED SECTION ABOVE =====
+        # do everything on a "fit set", leave-one-out style. (both decoding axis fit and the mean center thing)
+        # 2024.03.14
         X[mask[0]] = X0[sp]
         X[mask[1]] = X1[sp]
     
         r1 = X[mask[0]].squeeze()
         r2 = X[mask[1]].squeeze()
+        # for dprime just use everything
         result = decoding.do_decoding(r1, r2, axes, wopt=_result.wopt)
 
-        # project r1 and r2 onto the optimal decoding axis, find decision boundary, count %correct labeled
-        # very important to do cross validation here, otherwise percent correct calc is circular
-        r1proj = r1.T @ axes.T @ _result.wopt
-        r2proj = r2.T @ axes.T @ _result.wopt
-        # leave-one-out cross validation 
-        all_data = np.concatenate([r1proj, r2proj])
-        labels = np.concatenate([np.zeros((r1proj.shape[0])), np.ones((r2proj.shape[0]))])
+        all_data = np.concatenate([r1, r2], axis=1)
+        labels = np.concatenate([np.zeros((r1.shape[1])), np.ones((r2.shape[1]))])
         pred_lab = np.zeros((labels.shape[0]))
-        for i in range(r1proj.shape[0]+r2proj.shape[0]):
-            fit = np.array(list(set(np.arange(all_data.shape[0])).difference(set([i]))))
+        for i in range(all_data.shape[1]):
+            fit = np.array(list(set(np.arange(all_data.shape[1])).difference(set([i]))))
+
+            r1_fit = all_data[:, fit][:, labels[fit]==0]
+            r2_fit = all_data[:, fit][:, labels[fit]==1]
+            _result = decoding.do_decoding(r1_fit, r2_fit, axes)
+
+            r1proj_fit = r1_fit.T @ axes.T @ _result.wopt
+            r2proj_fit = r2_fit.T @ axes.T @ _result.wopt
+            proj_fit = np.concatenate((r1proj_fit, r2proj_fit))[:, 0]
+
+            r_test = (all_data[:, [i]].T @ axes.T @ _result.wopt)[0][0]
+
             _labels = labels[fit]
-            _data = all_data[fit]
+            _data = proj_fit
             r1u = np.mean(_data[_labels==0])
             r2u = np.mean(_data[_labels==1])
-            if (abs(all_data[i]-r1u)) < (abs(all_data[i]-r2u)):
+
+            if (abs(r_test-r1u)) < (abs(r_test-r2u)):
                 pred_lab[i] = 0
             else:
                 pred_lab[i] = 1
+            
         percent_correct = np.mean(labels==pred_lab)
 
 

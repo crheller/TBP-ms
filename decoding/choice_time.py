@@ -27,6 +27,18 @@ twindows = [
     "ws0.35_we0.45", 
     "ws0.4_we0.5"
 ]
+twindows = [
+    "ws-0.5_we-0.4_trial",
+    "ws-0.4_we-0.3_trial",
+    "ws-0.3_we-0.2_trial",
+    "ws-0.2_we-0.1_trial",
+    "ws-0.1_we-0.0_trial",
+    "ws0.0_we0.1_trial", 
+    "ws0.1_we0.2_trial", 
+    "ws0.2_we0.3_trial", 
+    "ws0.3_we0.4_trial", 
+    "ws0.4_we0.5_trial"
+]
 
 batch = 324
 sqrt = True
@@ -45,7 +57,7 @@ for site in sites:
             model = catch_model.replace("Decoding_fs100_", f"Decoding_fs100_{twin}_")
             res = pd.read_pickle(results_file(RESULTS_DIR, site, batch, model, "output.pickle"))    
             res["site"] = site
-            area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",))
+            area = nd.pd_query(sql=f"SELECT area from sCellFile where cellid like '%{site}%'")
             area = area.iloc[0][0]
             res["area"] = area
             if sqrt:
@@ -67,7 +79,7 @@ peg_catch = np.stack(peg_catch_pc)
 a1_catch_pc = np.stack(a1_catch_pc)
 peg_catch_pc = np.stack(peg_catch_pc)
 
-t = np.linspace(-0.1, 0.4, len(twindows))
+t = np.linspace(-0.5, 0.5, len(twindows))
 f, ax = plt.subplots(1, 1, figsize=(5, 3))
 
 u = a1_catch.mean(axis=0)
@@ -87,7 +99,7 @@ ax.legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
 ax.set_xlabel("Time from sound onset (s)")
 ax.set_ylabel("Choice decoding (d-prime)")
 
-onw = 2
+onw = 7
 offw = -1
 f, ax = plt.subplots(1, 2, figsize=(3, 6))
 
@@ -142,7 +154,7 @@ for site in sites:
             model = target_model.replace("Decoding_fs100_", f"Decoding_fs100_{twin}_")
             res = pd.read_pickle(results_file(RESULTS_DIR, site, batch, model, "output.pickle"))    
             res["site"] = site
-            area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",))
+            area = nd.pd_query(sql=f"SELECT area from sCellFile where cellid like '%{site}%'")
             area = area.iloc[0][0]
             res["area"] = area
             if sqrt:
@@ -228,10 +240,10 @@ for (j, i) in enumerate(np.argmax(a1_target_5, axis=1)):
         ax[2].plot(i, j, "*", color="k")
 ax[2].set_title("-5 dB")
 for a in ax:
-    a.axvline(3.5, color="k", label="lick allowed")
-    a.axvline(0.5, color="purple", label="sound on")
-    a.set_xticks(np.arange(0, len(twindows), step=2)+0.5)
-    a.set_xticklabels(np.round(np.arange(0.1, 0.6, step=0.1), 2))
+    a.set_xticks(np.arange(0, len(twindows), step=2))
+    a.set_xticklabels(np.round(np.arange(-0.4, 0.6, step=0.1), 2)[::2])
+    a.axvline(7, color="k", label="lick allowed")
+    a.axvline(5, color="purple", label="sound on")
     a.set_xlabel("Time (sec)")
     a.set_ylabel("Dataset")
 ax[2].legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
@@ -259,10 +271,10 @@ for (j, i) in enumerate(np.argmax(peg_target_5, axis=1)):
         ax[2].plot(i, j, "*", color="k")
 ax[2].set_title("-5 dB")
 for a in ax:
-    a.axvline(3.5, color="k", label="lick allowed")
-    a.axvline(0.5, color="purple", label="sound on")
-    a.set_xticks(np.arange(0, len(twindows), step=2)+0.5)
-    a.set_xticklabels(np.round(np.arange(0.1, 0.6, step=0.1), 2))
+    a.axvline(7, color="k", label="lick allowed")
+    a.axvline(5, color="purple", label="sound on")
+    a.set_xticks(np.arange(0, len(twindows), step=2))
+    a.set_xticklabels(np.round(np.arange(-0.4, 0.6, step=0.1), 2)[::2])
     a.set_xlabel("Time (sec)")
     a.set_ylabel("Dataset")
 ax[2].legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
@@ -302,10 +314,10 @@ for (j, i) in enumerate(np.argmax(a1t_5_smooth, axis=1)):
         ax[2].plot(i, a1t_5_smooth[j, i], "*", color="k")
 ax[2].set_title("-5 dB")
 for a in ax:
-    a.axvline(3.5, color="k", label="lick allowed")
-    a.axvspan(0.5, 4.5, color="purple", alpha=0.3, lw=0, label="sound on")
-    a.set_xticks(np.arange(0, len(twindows), step=2)+0.5)
-    a.set_xticklabels(np.round(np.arange(0.1, 0.6, step=0.1), 2))
+    a.axvline(7, color="k", label="lick allowed")
+    a.axvspan(5, 8, color="purple", alpha=0.3, lw=0, label="sound on")
+    a.set_xticks(np.arange(0, len(twindows), step=2))
+    a.set_xticklabels(np.round(np.arange(-0.4, 0.6, step=0.1), 2)[::2])
     a.set_xlabel("Time (sec)")
     a.set_ylabel("d-prime")
 ax[2].legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
@@ -334,10 +346,10 @@ for (j, i) in enumerate(np.argmax(pegt_5_smooth, axis=1)):
         ax[2].plot(i, pegt_5_smooth[j, i], "*", color="k")
 ax[2].set_title("-5 dB")
 for a in ax:
-    a.axvline(3.5, color="k", label="lick allowed")
-    a.axvspan(0.5, 4.5, color="purple", alpha=0.3, lw=0, label="sound on")
-    a.set_xticks(np.arange(0, len(twindows), step=2)+0.5)
-    a.set_xticklabels(np.round(np.arange(0.1, 0.6, step=0.1), 2))
+    a.axvline(7, color="k", label="lick allowed")
+    a.axvspan(5, 8, color="purple", alpha=0.3, lw=0, label="sound on")
+    a.set_xticks(np.arange(0, len(twindows), step=2))
+    a.set_xticklabels(np.round(np.arange(-0.4, 0.6, step=0.1), 2)[::2])
     a.set_xlabel("Time (sec)")
     a.set_ylabel("d-prime")
 ax[2].legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
@@ -375,10 +387,10 @@ ax[1, 1].hist(pmax, color="tab:orange", edgecolor="k",
                 histtype="stepfilled", zorder=0, bins=np.arange(0, 10, step=1), align="left")
 
 for a in ax.flatten():
-    a.axvline(3.5, color="k")
-    a.axvspan(0.5, 4.5, color="grey", alpha=0.3, lw=0, zorder=-1)
-    a.set_xticks(np.arange(0, len(twindows), step=2)+0.5)
-    a.set_xticklabels(np.round(np.arange(0.1, 0.6, step=0.1), 2))
+    a.axvline(7, color="k", label="lick allowed")
+    a.axvspan(5, 8, color="lightgrey", zorder=-1, alpha=0.3, lw=0, label="sound on")
+    a.set_xticks(np.arange(0, len(twindows), step=2))
+    a.set_xticklabels(np.round(np.arange(-0.4, 0.6, step=0.1), 2)[::2])
 
 for a in [ax[0, 0], ax[0, 1]]:
     a.set_ylabel("d-prime")
@@ -432,10 +444,10 @@ ax[1, 1].hist(pmax, color="tab:orange", edgecolor="k",
                 histtype="stepfilled", zorder=0, bins=np.arange(0, 10, step=1), align="left")
 
 for a in ax.flatten():
-    a.axvline(3.5, color="k")
-    a.axvspan(0.5, 4.5, color="grey", alpha=0.3, lw=0, zorder=-1)
-    a.set_xticks(np.arange(0, len(twindows), step=2)+0.5)
-    a.set_xticklabels(np.round(np.arange(0.1, 0.6, step=0.1), 2))
+    a.axvline(7, color="k", label="lick allowed")
+    a.axvspan(5, 8, color="lightgrey", zorder=-1, alpha=0.3, lw=0, label="sound on")
+    a.set_xticks(np.arange(0, len(twindows), step=2))
+    a.set_xticklabels(np.round(np.arange(-0.4, 0.6, step=0.1), 2)[::2])
 
 for a in [ax[0, 0], ax[0, 1]]:
     a.set_ylabel("percent correct")
