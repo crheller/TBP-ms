@@ -7,7 +7,7 @@ import nems0.db as nd
 import numpy as np
 
 batch = 324
-fs = 100
+fs = 10
 recache = True
 
 sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])

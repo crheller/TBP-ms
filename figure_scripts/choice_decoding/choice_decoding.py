@@ -22,8 +22,7 @@ import os
 
 figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/choice_decoding"
 
-target_model = "tbpChoiceDecoding_fs100_decision.h.m_DRops.dim2.ddr"
-target_model_shuffle = "tbpChoiceDecoding_fs100_decision.h.m_DRops.dim2.ddr_shuffle"
+target_model = "tbpChoiceDecoding_fs10_decision.h.m_DRops.dim2.ddr"
 
 twindows_early = [
     "ws0.0_we0.1_trial_fromfirst", 
@@ -52,9 +51,8 @@ i = 0
 for site in sites:
     try:
         for twin in twindows_early+twindows_late:
-
             # actual results
-            model = target_model.replace("Decoding_fs100_", f"Decoding_fs100_{twin}_")
+            model = target_model.replace("Decoding_fs10_", f"Decoding_fs10_{twin}_")
             res = pd.read_pickle(results_file(RESULTS_DIR, site, batch, model, "output.pickle"))    
             area = nd.pd_query(sql=f"SELECT area from sCellFile where cellid like '%{site}%'")
             area = area.iloc[0][0]
@@ -77,32 +75,8 @@ for site in sites:
 
                 i += 1
 
-            # shuffle results
-            model = target_model_shuffle.replace("Decoding_fs100_", f"Decoding_fs100_{twin}_")
-            res = pd.read_pickle(results_file(RESULTS_DIR, site, batch, model, "output.pickle"))    
-            area = nd.pd_query(sql=f"SELECT area from sCellFile where cellid like '%{site}%'")
-            area = area.iloc[0][0]
-            if sqrt:
-                res["dp"] = np.sqrt(res["dp"])
-
-            # loop over results and append to dataframe
-            for j in range(res.shape[0]):
-                df.loc[i, :] = [
-                    res.iloc[j]["dp"],
-                    res.iloc[j]["percent_correct"],
-                    float(twin.split("_")[0].strip("ws")),
-                    float(twin.split("_")[1].strip("we")),
-                    "fromfirst" in twin,
-                    thelp.get_snrs([res["stimulus"].iloc[j]])[0],
-                    area,
-                    site,
-                    True
-                ]   
-
-                i += 1
-
     except:
-        print(f"model didn't exsit for site {site}. Prob too few reps")
+        print(f"{twin} model didn't exsit for site {site}. Prob too few reps")
 
 snrs = [-5, 0, np.inf] # don't use -10db, not enough trials
 cmap = plt.get_cmap("Reds", 5)
