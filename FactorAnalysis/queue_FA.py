@@ -21,7 +21,7 @@ for batch in batches:
                     batch=batch,
                     modellist=modelnames,
                     executable_path=python_path,
-                    script_path=script,
+                    script_path=analysis_script,
                     user='hellerc',
                     force_rerun=force_rerun,
                     reserve_gb=2, priority=2)

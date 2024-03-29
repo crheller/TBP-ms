@@ -83,23 +83,47 @@ for (i, site) in enumerate(sites):
 
 # concatenate means and trials across recording sites
 active_mean = np.concatenate([a.mean(axis=0, keepdims=True) for a in active_trials], axis=0)
+active_reps = [s.shape[0] for s in active_trials] 
+active_weight =  1 / np.array(active_reps) # weight each experiment equally
+active_weight = np.concatenate([np.repeat(p, active_reps[i]) for i, p in enumerate(active_weight)])
 active_trials = np.concatenate(active_trials, axis=0)
+
 passive_mean = np.concatenate([a.mean(axis=0, keepdims=True) for a in passive_trials], axis=0)
+passive_reps = [s.shape[0] for s in passive_trials] 
+passive_weight =  1 / np.array(passive_reps) # weight each experiment equally
+passive_weight = np.concatenate([np.repeat(p, passive_reps[i]) for i, p in enumerate(passive_weight)])
 passive_trials = np.concatenate(passive_trials, axis=0)
+
+
 hit_mean = np.concatenate([a.mean(axis=0, keepdims=True) for a in hit_trials], axis=0)
+hit_reps = [s.shape[0] for s in hit_trials] 
+hit_weight = 1 / np.array(hit_reps) # weight each experiment equally
+hit_weight = np.concatenate([np.repeat(p, hit_reps[i]) for i, p in enumerate(hit_weight)])
 hit_trials = np.concatenate(hit_trials, axis=0)
+
 miss_mean = np.concatenate([a.mean(axis=0, keepdims=True) for a in miss_trials], axis=0)
+miss_reps = [s.shape[0] for s in miss_trials] 
+miss_weight = 1 / np.array(miss_reps) # weight each experiment equally
+miss_weight = np.concatenate([np.repeat(p, miss_reps[i]) for i, p in enumerate(miss_weight)])
 miss_trials = np.concatenate(miss_trials, axis=0)
+
 fa_mean = np.concatenate([a.mean(axis=0, keepdims=True) for a in fa_trials], axis=0)
+fa_reps = [s.shape[0] for s in fa_trials] 
+fa_weight = 1 / np.array(fa_reps) # weight each experiment equally
+fa_weight = np.concatenate([np.repeat(p, fa_reps[i]) for i, p in enumerate(fa_weight)])
 fa_trials = np.concatenate(fa_trials, axis=0)
+
 cr_mean = np.concatenate([a.mean(axis=0, keepdims=True) for a in cr_trials], axis=0)
+cr_reps = [s.shape[0] for s in cr_trials] 
+cr_weight = 1 / np.array(cr_reps) # weight each experiment equally
+cr_weight = np.concatenate([np.repeat(p, cr_reps[i]) for i, p in enumerate(cr_weight)])
 cr_trials = np.concatenate(cr_trials, axis=0)
 
 
 # summary histogram of active vs. passive pupil (to make general arousal point)
 
 # Split active by behavioral output
-bw = (0, 5)
+bw = (0, 2)
 f, ax = plt.subplots(2, 3, figsize=(7, 4.5))
 
 # active vs. passive pupil
@@ -123,17 +147,25 @@ ax[1, 0].set_xlim((-1, 3))
 ax[1, 0].set_ylabel(r"Pupil size (max$^{-1}$)")
 ax[1, 0].set_xticks([])
 
+stat, pval = ss.wilcoxon(yy0, yy1)
+print(f"Active vs. passive: p = {pval}, stat: {stat}")
+
 # behavior pupil
 t = np.linspace(0, 4, 40)
 keys = ["hit", "correct reject", "miss", "false alarm"]
 colors = ["darkblue", "cornflowerblue", "lightcoral", "firebrick"] # reds for incorrect, blues for correct
 data_all = [hit_trials, cr_trials, miss_trials, fa_trials]
 data = [hit_mean, cr_mean, miss_mean, fa_mean]
-for i, (kk, mm, mmt, col) in enumerate(zip(keys, data, data_all, colors)):
+weights = [hit_weight, cr_weight, miss_weight, fa_weight]
+for i, (kk, mm, mmt, mmw, col) in enumerate(zip(keys, data, data_all, weights, colors)):
 
     # plot in time
-    u = np.nanmean(mmt, axis=0)
-    sem = np.nanstd(mmt, axis=0) / np.sqrt(mmt.shape[0])
+    u = np.nanmean(mm, axis=0)
+    ma = np.ma.MaskedArray(mmt, mask=np.isnan(mmt))
+    # u = np.average(ma, axis=0, weights=mmw)
+    # sem = np.nanstd(mmt, axis=0) / np.sqrt(mmt.shape[0])
+    var = np.average((ma - u)**2, axis=0, weights=mmw)
+    sem = np.sqrt(var) / np.sqrt(mmt.shape[0])
     ax[0, 1].plot(t, u, label=kk, color=col)
     ax[0, 1].fill_between(t, u-sem, u+sem, color=col, alpha=0.3, lw=0)
 
@@ -142,9 +174,13 @@ for i, (kk, mm, mmt, col) in enumerate(zip(keys, data, data_all, colors)):
     ax[1, 1].errorbar(i, yy.mean(), yerr=yy.std()/np.sqrt(len(yy)),
                         marker="o", capsize=4, lw=2, c=col)
 
+    mm = (mm.T - mm[:, 0]).T
+    u = np.nanmean(mm, axis=0)
     mmt = (mmt.T - mmt[:, 0]).T
-    u = np.nanmean(mmt, axis=0)
-    sem = np.nanstd(mmt, axis=0) / np.sqrt(mmt.shape[0])
+    ma = np.ma.MaskedArray(mmt, mask=np.isnan(mmt))
+    var = np.average((ma - u)**2, axis=0, weights=mmw)
+    sem = np.sqrt(var) / np.sqrt(mmt.shape[0])
+    # sem = np.nanstd(mmt, axis=0) / np.sqrt(mmt.shape[0])
     ax[0, 2].plot(t, u, label=kk, color=col)
     ax[0, 2].fill_between(t, u-sem, u+sem, color=col, alpha=0.3, lw=0)
 
