@@ -41,22 +41,22 @@ catch_modellist = [
     ## Catch choice decoding
     f'tbpChoiceDecoding_decision.cr.ich_DRops.dim{ndim}.ddr',
     # sliding window
-    f'tbpChoiceDecoding_fs100_ws0.0_we0.1_decision.cr.ich_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs100_ws0.1_we0.2_decision.cr.ich_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs100_ws0.2_we0.3_decision.cr.ich_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs100_ws0.3_we0.4_decision.cr.ich_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs100_ws0.4_we0.5_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.0_we0.1_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.1_we0.2_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.2_we0.3_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.3_we0.4_decision.cr.ich_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.4_we0.5_decision.cr.ich_DRops.dim{ndim}.ddr',
 ]
 
 target_modellist = [
     ## Target choice decoding
     f'tbpChoiceDecoding_decision.h.m_DRops.dim{ndim}.ddr',
     # sliding window
-    f'tbpChoiceDecoding_fs100_ws0.0_we0.1_decision.h.m_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs100_ws0.1_we0.2_decision.h.m_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs100_ws0.2_we0.3_decision.h.m_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs100_ws0.3_we0.4_decision.h.m_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs100_ws0.4_we0.5_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.0_we0.1_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.1_we0.2_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.2_we0.3_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.3_we0.4_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.4_we0.5_decision.h.m_DRops.dim{ndim}.ddr',
 ]
 
 # ================= TRIAL BASED ANALYSIS =================
