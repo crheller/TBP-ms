@@ -114,6 +114,17 @@ for op in modelname.split("_"):
     if op.startswith("fromfirst"):
         from_trial_start = True # as a control, reference from the trial start (should be chance level at some point???)
 
+# based on other options, update to the correct FA model
+if factorAnalysis:
+    if trial_epoch & from_trial_start:
+        fa_model = fa_model + f"_ws{window_start}_we{window_end}_trial_fromfirst"
+    elif trial_epoch:
+        fa_model = fa_model + f"_ws{window_start}_we{window_end}_trial"
+    else:
+        pass
+
+    log.info(f"updating factor analysis model based on decoding options to: {fa_model}")
+
 if len(mask) != 2:
     raise ValueError("decision mask should be len = 2. Condition 1 vs. condition 2 to be decoded (e.g. hit vs. miss)")
 

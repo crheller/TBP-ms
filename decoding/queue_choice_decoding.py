@@ -37,27 +37,27 @@ bad_target_sites = [
 ndim = 2
 # ==================== STIMULUS BASED ANALYSIS ===============
 # sliding window through the target/catch stimulus
-catch_modellist = [
-    ## Catch choice decoding
-    f'tbpChoiceDecoding_decision.cr.ich_DRops.dim{ndim}.ddr',
-    # sliding window
-    f'tbpChoiceDecoding_fs10_ws0.0_we0.1_decision.cr.ich_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs10_ws0.1_we0.2_decision.cr.ich_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs10_ws0.2_we0.3_decision.cr.ich_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs10_ws0.3_we0.4_decision.cr.ich_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs10_ws0.4_we0.5_decision.cr.ich_DRops.dim{ndim}.ddr',
-]
+# catch_modellist = [
+#     ## Catch choice decoding
+#     f'tbpChoiceDecoding_decision.cr.ich_DRops.dim{ndim}.ddr',
+#     # sliding window
+#     f'tbpChoiceDecoding_fs10_ws0.0_we0.1_decision.cr.ich_DRops.dim{ndim}.ddr',
+#     f'tbpChoiceDecoding_fs10_ws0.1_we0.2_decision.cr.ich_DRops.dim{ndim}.ddr',
+#     f'tbpChoiceDecoding_fs10_ws0.2_we0.3_decision.cr.ich_DRops.dim{ndim}.ddr',
+#     f'tbpChoiceDecoding_fs10_ws0.3_we0.4_decision.cr.ich_DRops.dim{ndim}.ddr',
+#     f'tbpChoiceDecoding_fs10_ws0.4_we0.5_decision.cr.ich_DRops.dim{ndim}.ddr',
+# ]
 
-target_modellist = [
-    ## Target choice decoding
-    f'tbpChoiceDecoding_decision.h.m_DRops.dim{ndim}.ddr',
-    # sliding window
-    f'tbpChoiceDecoding_fs10_ws0.0_we0.1_decision.h.m_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs10_ws0.1_we0.2_decision.h.m_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs10_ws0.2_we0.3_decision.h.m_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs10_ws0.3_we0.4_decision.h.m_DRops.dim{ndim}.ddr',
-    f'tbpChoiceDecoding_fs10_ws0.4_we0.5_decision.h.m_DRops.dim{ndim}.ddr',
-]
+# target_modellist = [
+#     ## Target choice decoding
+#     f'tbpChoiceDecoding_decision.h.m_DRops.dim{ndim}.ddr',
+#     # sliding window
+#     f'tbpChoiceDecoding_fs10_ws0.0_we0.1_decision.h.m_DRops.dim{ndim}.ddr',
+#     f'tbpChoiceDecoding_fs10_ws0.1_we0.2_decision.h.m_DRops.dim{ndim}.ddr',
+#     f'tbpChoiceDecoding_fs10_ws0.2_we0.3_decision.h.m_DRops.dim{ndim}.ddr',
+#     f'tbpChoiceDecoding_fs10_ws0.3_we0.4_decision.h.m_DRops.dim{ndim}.ddr',
+#     f'tbpChoiceDecoding_fs10_ws0.4_we0.5_decision.h.m_DRops.dim{ndim}.ddr',
+# ]
 
 # ================= TRIAL BASED ANALYSIS =================
 # sliding window across entire trial
@@ -65,11 +65,6 @@ target_modellist = [
 # so ws0.0_we0.1_trial should be equivalent to ws0.0_we0.1 etc.
 # catch_modellist = [
 #     ## Catch choice decoding
-#     f'tbpChoiceDecoding_fs10_ws-0.5_we-0.4_trial_decision.cr.ich_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws-0.4_we-0.3_trial_decision.cr.ich_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws-0.3_we-0.2_trial_decision.cr.ich_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws-0.2_we-0.1_trial_decision.cr.ich_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws-0.1_we-0.0_trial_decision.cr.ich_DRops.dim{ndim}.ddr',
 #     f'tbpChoiceDecoding_fs10_ws0.0_we0.1_trial_decision.cr.ich_DRops.dim{ndim}.ddr', # sound onset
 #     f'tbpChoiceDecoding_fs10_ws0.1_we0.2_trial_decision.cr.ich_DRops.dim{ndim}.ddr',
 #     f'tbpChoiceDecoding_fs10_ws0.2_we0.3_trial_decision.cr.ich_DRops.dim{ndim}.ddr',
@@ -78,11 +73,6 @@ target_modellist = [
 # ]
 # target_modellist = [
 #     ## Target choice decoding
-#     f'tbpChoiceDecoding_fs10_ws-0.5_we-0.4_trial_decision.h.m_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws-0.4_we-0.3_trial_decision.h.m_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws-0.3_we-0.2_trial_decision.h.m_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws-0.2_we-0.1_trial_decision.h.m_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws-0.1_we-0.0_trial_decision.h.m_DRops.dim{ndim}.ddr',
 #     f'tbpChoiceDecoding_fs10_ws0.0_we0.1_trial_decision.h.m_DRops.dim{ndim}.ddr', # sound onset
 #     f'tbpChoiceDecoding_fs10_ws0.1_we0.2_trial_decision.h.m_DRops.dim{ndim}.ddr',
 #     f'tbpChoiceDecoding_fs10_ws0.2_we0.3_trial_decision.h.m_DRops.dim{ndim}.ddr',
@@ -98,13 +88,13 @@ target_modellist = [
 #     f'tbpChoiceDecoding_fs10_ws0.3_we0.4_trial_fromfirst_decision.cr.ich_DRops.dim{ndim}.ddr',
 #     f'tbpChoiceDecoding_fs10_ws0.4_we0.5_trial_fromfirst_decision.cr.ich_DRops.dim{ndim}.ddr',
 # ]
-# target_modellist = [
-#     f'tbpChoiceDecoding_fs10_ws0.0_we0.1_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws0.1_we0.2_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws0.2_we0.3_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws0.3_we0.4_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
-#     f'tbpChoiceDecoding_fs10_ws0.4_we0.5_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
-# ]
+target_modellist = [
+    f'tbpChoiceDecoding_fs10_ws0.0_we0.1_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.1_we0.2_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.2_we0.3_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.3_we0.4_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
+    f'tbpChoiceDecoding_fs10_ws0.4_we0.5_trial_fromfirst_decision.h.m_DRops.dim{ndim}.ddr',
+]
 
 
 if models == "targets":

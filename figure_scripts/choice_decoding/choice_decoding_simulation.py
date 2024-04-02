@@ -23,15 +23,21 @@ import os
 figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/choice_decoding"
 savefig = False
 
-target_model = "tbpChoiceDecoding_fs100_decision.h.m_DRops.dim2.ddr_FAperstim.4"
+target_model = "tbpChoiceDecoding_fs10_decision.h.m_DRops.dim2.ddr_FAperstim.5"
 
-twindows_early = []
+twindows_early = [
+    "ws0.0_we0.1_trial_fromfirst", 
+    "ws0.1_we0.2_trial_fromfirst", 
+    "ws0.2_we0.3_trial_fromfirst", 
+    "ws0.3_we0.4_trial_fromfirst", 
+    "ws0.4_we0.5_trial_fromfirst"    
+]
 twindows_late = [
-    "ws0.0_we0.1", 
-    "ws0.1_we0.2", 
-    "ws0.2_we0.3", 
-    "ws0.3_we0.4", 
-    "ws0.4_we0.5"
+    "ws0.0_we0.1_trial", 
+    "ws0.1_we0.2_trial", 
+    "ws0.2_we0.3_trial", 
+    "ws0.3_we0.4_trial", 
+    "ws0.4_we0.5_trial"
 ]
 
 batch = 324
@@ -46,7 +52,7 @@ for site in sites:
     try:
         for twin in twindows_early+twindows_late:
             # actual results
-            model = target_model.replace("Decoding_fs100_", f"Decoding_fs100_{twin}_")
+            model = target_model.replace("Decoding_fs10_", f"Decoding_fs10_{twin}_")
             res = pd.read_pickle(results_file(RESULTS_DIR, site, batch, model, "output.pickle"))    
             area = nd.pd_query(sql=f"SELECT area from sCellFile where cellid like '%{site}%'")
             area = area.iloc[0][0]
@@ -75,19 +81,21 @@ for site in sites:
 snrs = [-5, 0, np.inf] # don't use -10db, not enough trials
 cmap = plt.get_cmap("Reds", 5)
 
-f = plt.figure(figsize=(5, 4))
-a1_taxis = plt.subplot2grid((2, 3), (0, 0), colspan=3)
-peg_taxis = plt.subplot2grid((2, 3), (1, 0), colspan=3)
+f = plt.figure(figsize=(6, 4))
+a1_taxis = plt.subplot2grid((2, 4), (0, 0), colspan=3)
+peg_taxis = plt.subplot2grid((2, 4), (1, 0), colspan=3)
+a1_evl = plt.subplot2grid((2, 4), (0, 3), colspan=1)
+peg_evl = plt.subplot2grid((2, 4), (1, 3), colspan=1)
 
 # plot time decoding, early windows, A1
 for row, (axis, area, comp_ax) in enumerate(zip([a1_taxis, peg_taxis], ["A1", "PEG"], [a1_evl, peg_evl])):
        
     # time plots
-    # early_mask = (df.area==area) & (df.early==True) & (df.shuffle==False)
-    # for (i, snr) in enumerate(snrs):
-    #     m = early_mask & (df.snr==snr)
-    #     d = df[m][["cp", "tstart"]].groupby("tstart").mean()["cp"]
-    #     axis.plot(d, color=cmap(i+2))
+    early_mask = (df.area==area) & (df.early==True) & (df.shuffle==False)
+    for (i, snr) in enumerate(snrs):
+        m = early_mask & (df.snr==snr)
+        d = df[m][["cp", "tstart"]].groupby("tstart").mean()["cp"]
+        axis.plot(d, color=cmap(i+2))
 
     # plot time decoding, late windows, A1
     late_mask = (df.area==area) & (df.early==False) & (df.shuffle==False)
@@ -103,6 +111,29 @@ for row, (axis, area, comp_ax) in enumerate(zip([a1_taxis, peg_taxis], ["A1", "P
     axis.set_ylabel("Choice prob.")
     axis.set_xlabel("Time (s)")
     axis.legend(frameon=False, bbox_to_anchor=(0, 1), loc="upper left")
+
+    # combine across SNRs and simply test if mean early choice % is different than late
+    early_data = df[early_mask & (df.tstart<0.2)][["cp", "site"]].groupby(by=["site"]).mean()
+    late_data = df[late_mask & (df.tstart<0.2)][["cp", "site"]].groupby(by=["site"]).mean()
+
+    x = np.stack([
+        np.zeros((early_data.shape[0])),
+        np.ones((early_data.shape[0]))
+    ])
+    y = np.stack([
+        early_data["cp"].to_numpy(),
+        late_data["cp"].to_numpy()
+    ])
+    comp_ax.plot(x, y, ".-", color="lightgrey", lw=0.5)
+    comp_ax.plot(x.mean(axis=1, keepdims=True), y.mean(axis=1, keepdims=True), "o-", color="k")
+    comp_ax.axhline(0.5, linestyle="--", color="k")
+    comp_ax.set_ylim((None, 1))
+    comp_ax.set_xlim((-1, 2))
+    comp_ax.set_xticks([])
+
+    # wilcoxon test
+    pval, stat = ss.wilcoxon(y[0, :], y[1, :])
+    print(f"{area}, early vs. late, pval: {pval}, stat: {stat}")
 
 
 f.tight_layout()

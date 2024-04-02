@@ -48,6 +48,11 @@ shuffle = False
 perstim = False
 regress_pupil = False
 choice = False
+window_start = 0.1
+window_end = 0.4
+trial_epoch = False
+from_trial_start = False
+fs = 10
 for op in modelname.split("_"):
     if op == "shuff":
         shuffle = True
@@ -57,6 +62,16 @@ for op in modelname.split("_"):
         regress_pupil = True
     if op == "choice":
         choice = True
+    if op.startswith("ws"):
+        window_start = float(op[2:])
+    if op.startswith("we"):
+        window_end = float(op[2:])
+    if op.startswith("trial"):
+        trial_epoch = True # default for trial based is to reference from the target
+    if op.startswith("fromfirst"):
+        from_trial_start = True # as a control, reference from the trial start (should be chance level at some point???)
+    if op.startswith("fs"):
+        fs = int(op[2:])
 
 if choice == False:
     raise ValueError("Must specifiy 'choice' in the modelname to distinguish from other FA models")
@@ -114,41 +129,51 @@ def get_loading_similarity(model, dim=0):
 # then, do analysis of each stimulus belonging to each type
 Xhit, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins = window_start,
+                                    wine = window_end,
                                     collapse=True,
                                     mask=["HIT_TRIAL"],
                                     recache=False,
+                                    get_full_trials=trial_epoch,
+                                    from_trial_start=from_trial_start,
                                     regresspupil=regress_pupil)
 Xmiss, _ = loaders.load_tbp_for_decoding(site=site, 
                                     batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
+                                    fs=fs,
+                                    wins = window_start,
+                                    wine = window_end,
                                     collapse=True,
                                     mask=["MISS_TRIAL"],
                                     recache=False,
+                                    get_full_trials=trial_epoch,
+                                    from_trial_start=from_trial_start,
                                     regresspupil=regress_pupil)
-Xcr, _ = loaders.load_tbp_for_decoding(site=site, 
-                                    batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
-                                    collapse=True,
-                                    mask=["CORRECT_REJECT_TRIAL"],
-                                    recache=False,
-                                    regresspupil=regress_pupil)
-Xich, _ = loaders.load_tbp_for_decoding(site=site, 
-                                    batch=batch,
-                                    wins = 0.1,
-                                    wine = 0.4,
-                                    collapse=True,
-                                    mask=["INCORRECT_HIT_TRIAL"],
-                                    recache=False,
-                                    regresspupil=regress_pupil)
+# Xcr, _ = loaders.load_tbp_for_decoding(site=site, 
+#                                     batch=batch,
+#                                     wins = window_start,
+#                                     wine = window_end,
+#                                     collapse=True,
+#                                     mask=["CORRECT_REJECT_TRIAL"],
+#                                     recache=False,
+#                                     get_full_trials=trial_epoch,
+#                                     from_trial_start=from_trial_start,
+#                                     regresspupil=regress_pupil)
+# Xich, _ = loaders.load_tbp_for_decoding(site=site, 
+#                                     batch=batch,
+#                                     wins = window_start,
+#                                     wine = window_end,
+#                                     collapse=True,
+#                                     get_full_trials=trial_epoch,
+#                                     from_trial_start=from_trial_start,
+#                                     mask=["INCORRECT_HIT_TRIAL"],
+#                                     recache=False,
+#                                     regresspupil=regress_pupil)
 # Keep only the catch and target stimuli, respectively
 Xhit = {k: v for k, v in Xhit.items() if ("TAR" in k)}
 Xmiss = {k: v for k, v in Xmiss.items() if ("TAR" in k)}
-Xcr = {k: v for k, v in Xcr.items() if ("CAT" in k)}
-Xich = {k: v for k, v in Xich.items() if ("CAT" in k)}
+# Xcr = {k: v for k, v in Xcr.items() if ("CAT" in k)}
+# Xich = {k: v for k, v in Xich.items() if ("CAT" in k)}
 
 # FOR SETTING UP FITTING COMMON SPACE ACROSS ALL STIM
 if perstim == False:
@@ -290,10 +315,10 @@ else:
     results = {
         "hit": {},
         "miss": {},
-        "correct_reject": {},
-        "incorrect_hit": {}
+        # "correct_reject": {},
+        # "incorrect_hit": {}
     }
-    for (k, X) in zip(results.keys(), [Xhit, Xmiss, Xcr, Xich]):
+    for (k, X) in zip(results.keys(), [Xhit, Xmiss]):
         stims = list(X.keys())
         # only keep stims w/ at least 5 trials
         stims = [s for s in stims if X[s].shape[1] >= 5]
