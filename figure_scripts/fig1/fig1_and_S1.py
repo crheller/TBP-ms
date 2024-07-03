@@ -5,15 +5,16 @@ for each animal
 RT plots for each animal (for a supplmental)
 d' performance across all animals as summary
 """
-import statistics
-import json
-import nems_lbhb.tin_helpers as thelp
-import pickle
-from nems_lbhb.baphy_experiment import BAPHYExperiment
-from nems_lbhb.behavior import get_reaction_times
-from nems_lbhb.behavior_plots import plot_RT_histogram
-import nems0.db as nd
+# set up python path to access helper functions
 import os
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+import sys
+sys.path.append(rdir)
+
+from settings import RESULTS_DIR
+import json
+import tin_helpers as thelp
+from plotting import plot_RT_histogram
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -23,9 +24,7 @@ mpl.rcParams['font.size'] = 8
 mpl.rcParams['xtick.labelsize'] = 8 
 mpl.rcParams['ytick.labelsize'] = 8 
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig1/"
-
-results_path = "/auto/users/hellerc/results/TBP-ms/behavior"
+results_path = os.path.join(RESULTS_DIR, "behavior_training")
 
 animals = [
     "Armillaria",
@@ -63,7 +62,6 @@ for an in animals:
     plot_RT_histogram(rts, bins=bins, ax=ax, cmap=gR, lw=2, legend=legend)
     ax.set_title(an)
     f.tight_layout()
-    f.savefig(os.path.join(figpath, f"RTs_{an}.svg"), dpi=500)
 
     # save di / dprime
     di[an] = DI
@@ -104,5 +102,3 @@ ax.set_ylabel(r"Performance ($d'$)")
 # ax.legend(frameon=False, bbox_to_anchor=(0, 1), loc="upper left")
 
 f.tight_layout()
-f.savefig(os.path.join(figpath, "dprime_summary.svg"), dpi=500)
-

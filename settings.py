@@ -1,6 +1,6 @@
 import os
 
-RESULTS_DIR = "~/heller_elife_2024"
+RESULTS_DIR = "/auto/users/hellerc/results/TBP_dryad"
 
 if os.path.isdir(RESULTS_DIR)==False:
     os.mkdir(RESULTS_DIR)
