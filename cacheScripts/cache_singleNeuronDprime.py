@@ -2,40 +2,35 @@
 Quick analysis to calculate d-prime between each target and catch
 for each neuron. Save in one big dataframe.
 """
-from itertools import combinations
-from nems_lbhb.baphy_experiment import BAPHYExperiment
-from dDR.utils.decoding import compute_dprime
-import nems_lbhb.tin_helpers as thelp
-import scipy.stats as ss
+import os
+rdir = os.path.dirname(os.path.dirname(__file__))
 import sys
-import nems0.db as nd
-sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
-from settings import BAD_SITES
+sys.path.append(rdir)
+
+from nems0 import recording
+
+from itertools import combinations
+from dDR.utils.decoding import compute_dprime
+import tin_helpers as thelp
+from settings import RESULTS_DIR
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import matplotlib as mpl
-import matplotlib as mpl
-mpl.rcParams['axes.spines.right'] = False
-mpl.rcParams['axes.spines.top'] = False
-mpl.rcParams['font.size'] = 8
-mpl.rcParams['xtick.labelsize'] = 8 
-mpl.rcParams['ytick.labelsize'] = 8 
 
 min_trials = 5
 n_resamples = 100
-batch = 324
-sites = [s for s in nd.get_batch_sites(batch)[0] if s not in BAD_SITES]
+db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
+sites = db.site
 fs = 10
 amask = ["HIT_TRIAL", "CORRECT_REJECT_TRIAL"]
 pmask = ["PASSIVE_EXPERIMENT"]
 
 dfs = []
-for site in sites:
-    area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",)).iloc[0][0]
-    options = {'resp': True, 'pupil': True, 'rasterfs': fs, 'stim': False}
-    manager = BAPHYExperiment(batch=batch, cellid=site, rawid=None)
-    rec = manager.get_recording(recache=False, **options)
+for (i, site) in enumerate(sites):
+    print(f"\n{site}, {i}/{len(sites)}")
+
+    area = db.loc[site, "area"]
+    uri = os.path.join(RESULTS_DIR, "recordings", db.loc[site, "10hz_uri"])
+    rec = recording.load_recording(uri)
     rec['resp'] = rec['resp'].rasterize()
     rec = rec.create_mask(True)
     arec = rec.and_mask(amask)
@@ -93,11 +88,11 @@ for site in sites:
                         adprime_null[rs] = np.sqrt(abs(compute_dprime(ss1_all[:ndraw1, np.newaxis].T, ss2_all[:ndraw2, np.newaxis].T)))
                         pdprime_null[rs] = np.sqrt(abs(compute_dprime(ss1_all[ndraw1:, np.newaxis].T, ss2_all[ndraw2:, np.newaxis].T)))
 
-                    null_delta_low_ci = np.quantile(adprime_null-pdprime_null, 0.025)
-                    null_delta_high_ci = np.quantile(adprime_null-pdprime_null, 0.975)
-
-                    # null_active_high = np.quantile(adprime_null, 0.95)
-                    # null_passive_high = np.quantile(pdprime_null, 0.95)
+                    # two sided test
+                    gg = np.isfinite(adprime_null) & np.isfinite(pdprime_null)
+                    dd = adprime_null[gg]-pdprime_null[gg]
+                    null_delta_low_ci = np.quantile(dd, 0.025)
+                    null_delta_high_ci = np.quantile(dd, 0.975)
 
                     # second resampling to test if d-prime itself for this pair is significant
                     # idea here is to randomly assign a stimulus ID to each repetition and
@@ -123,8 +118,9 @@ for site in sites:
                         adprime_null[rs] = np.sqrt(abs(compute_dprime(ssActive_all[:ndraw_active, np.newaxis].T, ssActive_all[ndraw_active:, np.newaxis].T)))
                         pdprime_null[rs] = np.sqrt(abs(compute_dprime(ssPassive_all[:ndraw_passive, np.newaxis].T, ssPassive_all[ndraw_passive:, np.newaxis].T)))
 
-                    null_active_high = np.quantile(adprime_null, 0.95)
-                    null_passive_high = np.quantile(pdprime_null, 0.95)
+                    # one sided test
+                    null_active_high = np.quantile(adprime_null[np.isfinite(adprime_null)], 0.95)
+                    null_passive_high = np.quantile(pdprime_null[np.isfinite(pdprime_null)], 0.95)
 
                     if ("TAR" in c[0]) & ("TAR" in c[1]):
                         category = "tar_tar"
