@@ -39,6 +39,8 @@ for site in sites:
 
     df.loc[site, :] = [site, area, hash_10hz, hash_50hz]
 
+# save "database" pointing to datasets
+df.to_csv(os.path.join(RESULTS_DIR, "db.csv"))
 
 # for uri in list, copy them to the dryad folder
 for i, (uri10, uri50) in enumerate(zip(uris_10hz, uris_50hz)):

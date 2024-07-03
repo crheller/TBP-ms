@@ -8,9 +8,8 @@ rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 import sys
 sys.path.append(rdir)
 
-import nems0.db as nd
-from nems_lbhb.baphy_experiment import BAPHYExperiment
-
+from settings import RESULTS_DIR
+import pandas as pd
 import tin_helpers as thelp
 import scipy.ndimage.filters as sf
 import numpy as np
@@ -23,25 +22,23 @@ mpl.rcParams['font.size'] = 8
 mpl.rcParams['xtick.labelsize'] = 8 
 mpl.rcParams['ytick.labelsize'] = 8 
 
-from settings import BAD_SITES
+from nems0 import recording
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig2/"
-
-# site = "CRD018d" -- A1 site
-# site = "CRD010b" -- PEG site
-sites = nd.get_batch_sites(324)[0]
-sites = [s for s in sites if s not in BAD_SITES]
-for site in sites:
+# site = "CRD018d" -- A1 example site 
+# site = "CRD010b" -- PEG example site
+db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
+fs = 50
+for site in db.site:
         try:
-                area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",)).iloc[0][0]
-                batch = 324
-                fs = 50
+
+                # get area / uri (50 Hz)
+                area = db.loc[site, "area"]
+                uri = os.path.join(RESULTS_DIR, "recordings", db.loc[site, "50hz_uri"])
+
                 amask = ["HIT_TRIAL", "CORRECT_REJECT_TRIAL"]
                 pmask = ["PASSIVE_EXPERIMENT"]
 
-                options = {'resp': True, 'pupil': True, 'rasterfs': fs, 'stim': False}
-                manager = BAPHYExperiment(batch=batch, cellid=site, rawid=None)
-                rec = manager.get_recording(recache=False, **options)
+                rec = recording.load_recording(uri)
                 rec['resp'] = rec['resp'].rasterize()
                 rec = rec.create_mask(True)
                 arec = rec.and_mask(amask)
@@ -119,9 +116,5 @@ for site in sites:
 
                 f.tight_layout()
 
-                if area=="PEG":
-                        f.savefig(os.path.join(figpath, f"PEG/popPSTH_{site}.svg"), dpi=500)
-                else:
-                        f.savefig(os.path.join(figpath, f"A1/popPSTH_{site}.svg"), dpi=500)
         except:
-                print(f"failed for {site}")
+                print(f"failed for {site}. Means that behavior probably was not great for this dataset and didn't have enough trials of a certain stimulus")
