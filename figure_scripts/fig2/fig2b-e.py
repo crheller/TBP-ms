@@ -6,6 +6,11 @@ bottom row:
     delta dprime histogram
 """
 import os
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+import sys
+sys.path.append(rdir)
+
+from settings import RESULTS_DIR
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,10 +22,8 @@ mpl.rcParams['font.size'] = 8
 mpl.rcParams['xtick.labelsize'] = 8 
 mpl.rcParams['ytick.labelsize'] = 8 
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig2/"
-
-df_resp = pd.read_csv("/auto/users/hellerc/results/TBP-ms/tar_vs_cat.csv", index_col=0)
-df_dprime = pd.read_csv("/auto/users/hellerc/results/TBP-ms/singleNeuronDprime.csv", index_col=0)
+df_resp = pd.read_csv(os.path.join(RESULTS_DIR, "tar_vs_cat.csv"), index_col=0)
+df_dprime = pd.read_csv(os.path.join(RESULTS_DIR, "singleNeuronDprime.csv"), index_col=0)
 gg_resp = df_resp.groupby(by=["snr", "cellid", "area"]).mean()
 s = 3
 alpha = 1
@@ -62,7 +65,6 @@ ax.set_ylim((vals.values.min(), vals.values.max()+0.5))
 ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
-f.savefig(os.path.join(figpath, "passive_resp_peg.svg"), dpi=500)
 print(f"{sum(vals.psig)}/{vals.shape[0]} significant, passive, dPEG \n")
 
 # mean responses active
@@ -84,7 +86,6 @@ ax.set_ylim((vals.values.min(), vals.values.max()+0.5))
 ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
-f.savefig(os.path.join(figpath, "active_resp_peg.svg"), dpi=500)
 print(f"{sum(vals.asig)}/{vals.shape[0]} significant, active, dPEG \n")
 
 # delta dprime histogram
@@ -108,7 +109,6 @@ ax.hist(
     edgecolor="k",
     histtype="stepfilled"
 )
-f.savefig(os.path.join(figpath, "delta_dprime_peg.svg"), dpi=500)
 print(f"{sum(sig_bool)}/{len(sig_bool)} significant change in d-prime dPEG \n")
 
 
@@ -151,7 +151,6 @@ ax.set_ylim((-5, 10))
 ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
-f.savefig(os.path.join(figpath, "passive_resp_a1.svg"), dpi=500)
 print(f"{sum(vals.psig)}/{vals.shape[0]} significant, passive, A1 \n")
 
 # mean responses active
@@ -176,7 +175,6 @@ ax.set_ylim((-5, 10))
 ax.plot([vals.values.min(), vals.values.max()],
             [vals.values.min(), vals.values.max()], 
             "grey", linestyle="--", zorder=-1)
-f.savefig(os.path.join(figpath, "active_resp_a1.svg"), dpi=500)
 print(f"{sum(vals.asig)}/{vals.shape[0]} significant, active, A1 \n")
 
 # delta dprime histogram
@@ -200,5 +198,4 @@ ax.hist(
     edgecolor="k",
     histtype="stepfilled"
 )
-f.savefig(os.path.join(figpath, "delta_dprime_a1.svg"), dpi=500)
 print(f"{sum(sig_bool)}/{len(sig_bool)} significant change in d-prime A1 \n")
