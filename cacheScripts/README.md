@@ -5,9 +5,8 @@ This directory contains python scripts that load raw data, performance analysis,
 * No analysis scripts are included for the results in Figure 1 or Fig 1 S1. Summary data used to produce the figure is included directly in the dryad data repository.
 
 #### Figure 2
-* Modulation Index of single neurons: `cache_MI.py` -- produces: ``
-* Mean catch vs. target response: `cache_uTar_uCat.py` -- produces: ``
-* Single neuron d-prime: `cache_singleNeuronDprime.py` -- produces: ``
+* Mean catch vs. target response: `cache_uTar_uCat.py` -- produces: `tar_vs_cat.csv`
+* Single neuron d-prime: `cache_singleNeuronDprime.py` -- produces: `singleNeuronDprime.csv`
 
 #### Figure 3
 * 

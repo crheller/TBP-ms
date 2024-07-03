@@ -151,4 +151,4 @@ for (i, site) in enumerate(sites):
             print(f"{c} didn't have matching epochs between passive/active")
 
 df = pd.concat(dfs)
-df.to_csv("/auto/users/hellerc/results/TBP-ms/singleNeuronDprime.csv")
+df.to_csv(os.path.join(RESULTS_DIR, "singleNeuronDprime.csv"))
