@@ -1,15 +1,18 @@
 """
-Draft figure with population PSTHs in active / passive and their difference
+Population PSTHs in active / passive and their difference
 Create for one example site.
-heatmaps of target, catch and target-catch for active and passive.
 """
+# set up python path to access helper functions
 import os
-from nems_lbhb.baphy_experiment import BAPHYExperiment
-import nems_lbhb.tin_helpers as thelp
-import scipy.ndimage.filters as sf
-import nems0.db as nd
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 import sys
-sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
+sys.path.append(rdir)
+
+import nems0.db as nd
+from nems_lbhb.baphy_experiment import BAPHYExperiment
+
+import tin_helpers as thelp
+import scipy.ndimage.filters as sf
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -24,8 +27,8 @@ from settings import BAD_SITES
 
 figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig2/"
 
-# site = "CRD018d" -- Good A1 site
-# site = "CRD010b" -- Good PEG site
+# site = "CRD018d" -- A1 site
+# site = "CRD010b" -- PEG site
 sites = nd.get_batch_sites(324)[0]
 sites = [s for s in sites if s not in BAD_SITES]
 for site in sites:
