@@ -2,19 +2,17 @@
 Summary of active vs. passive delte dprime for each target pair
 category
 """
-import charlieTools.TBP_ms.loaders as loaders
-import charlieTools.plotting as cplt
-import nems_lbhb.tin_helpers as thelp
-import nems0.db as nd
+import os
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+import sys
+sys.path.append(rdir)
+
+from settings import RESULTS_DIR
+from path_helpers import local_results_file
+import pandas as pd
+import numpy as np
 import scipy.stats as ss
 from itertools import combinations
-import os
-import sys
-sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
-from path_helpers import results_file
-from settings import RESULTS_DIR, BAD_SITES
-
-import scipy.stats as stats
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,27 +21,22 @@ mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 mpl.rcParams['font.size'] = 8
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig3"
-
-batch = 324
 sqrt = True
-sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
+db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
+sites = db.site
 
 # load decoding results
-fa = "" #"_FAperstim.4"
-amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+fa
-pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+fa
-sites = [s for s in sites if s not in BAD_SITES]
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
 active = []
 passive = []
 for site in sites:
     try:
-        ares = pd.read_pickle(results_file(RESULTS_DIR, site, batch, amodel, "output.pickle"))
-        pres = pd.read_pickle(results_file(RESULTS_DIR, site, batch, pmodel, "output.pickle"))
+        ares = pd.read_pickle(local_results_file(RESULTS_DIR, site, amodel, "output.pickle"))
+        pres = pd.read_pickle(local_results_file(RESULTS_DIR, site, pmodel, "output.pickle"))
         ares["site"] = site
         pres["site"] = site
-        area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",))
-        area = area.iloc[0][0]
+        area = db.loc[site, "area"]
         ares["area"] = area
         pres["area"] = area
         if sqrt:
@@ -100,8 +93,6 @@ ax[1].set_ylim((m, mm))
 #     a.set_xlabel(r"Passive $d'$")
 
 f.tight_layout()
-
-f.savefig(os.path.join(figpath, "dprime_scatter.svg"), dpi=500)
 
 ## Delta dprime strip plot
 s = 10
@@ -167,8 +158,6 @@ for a in ax:
     a.set_xticks([])
 
 f.tight_layout()
-
-f.savefig(os.path.join(figpath, "strippplot.svg"), dpi=500)
 
 
 # Do pairwise stats

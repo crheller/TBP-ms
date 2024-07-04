@@ -14,11 +14,13 @@ import nems_lbhb.tin_helpers as thelp
 import sys
 sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
 from path_helpers import results_file
-from settings import RESULTS_DIR, BAD_SITES
+from settings import BAD_SITES
 import numpy as np
 import nems0.db as nd
 import scipy.stats as ss
 import os
+
+RESULTS_DIR = "/auto/users/hellerc/results/TBP-ms"
 
 figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/choice_decoding"
 savefig = False
