@@ -11,7 +11,7 @@ sys.path.append(rdir)
 
 from nems0 import recording
 
-import tin_helpers as thelp
+import helpers.tin_helpers as thelp
 from settings import RESULTS_DIR
 import scipy.stats as ss
 import numpy as np

@@ -11,7 +11,7 @@ from nems0 import recording
 
 from itertools import combinations
 from dDR.utils.decoding import compute_dprime
-import tin_helpers as thelp
+import helpers.tin_helpers as thelp
 from settings import RESULTS_DIR
 import numpy as np
 import pandas as pd
