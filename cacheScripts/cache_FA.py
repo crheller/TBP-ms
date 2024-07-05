@@ -15,14 +15,12 @@ rdir = os.path.dirname(os.path.dirname(__file__))
 import sys
 sys.path.append(rdir)
 
-from nems0 import recording
-
 import helpers.fametrics as fhelp
 from settings import RESULTS_DIR
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import FactorAnalysis
-import helpers.loaders
+import helpers.loaders as loaders
 import pickle
 
 import logging 

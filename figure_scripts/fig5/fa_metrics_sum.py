@@ -3,15 +3,14 @@
     Active vs. passive %sv, loading sim, and dimensionality
     for A1 / PEG
 """
-import nems0.db as nd
-
-import sys
-sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
 import os
-from settings import RESULTS_DIR, BAD_SITES
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+import sys
+sys.path.append(rdir)
+
+from settings import RESULTS_DIR
 
 import scipy.stats as ss
-import pickle
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,18 +21,16 @@ mpl.rcParams['font.size'] = 8
 mpl.rcParams['xtick.labelsize'] = 8
 mpl.rcParams['ytick.labelsize'] = 8 
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig5/"
-
 batch = 324
 sqrt = True
-sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
+db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
+sites = db.site
 
-sites = [s for s in sites if s not in BAD_SITES]
 df = pd.DataFrame(columns=["asv", "psv", "als", "pls", "adim", "pdim", "site", "area", "epoch"])
 rr = 0
 for site in sites:
-    d = pd.read_pickle(os.path.join(RESULTS_DIR, "factor_analysis", str(batch), site, "FA_perstim_PR.pickle"))
-    area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",)).iloc[0][0]
+    d = pd.read_pickle(os.path.join(RESULTS_DIR, site, "FA_perstim_PR.pickle"))
+    area = db.loc[site, "area"]
     for e in d["active"].keys():
         df.loc[rr, :] = [
             d["active"][e]["sv"],
@@ -71,5 +68,3 @@ for i, m in enumerate(metrics):
         # print stats
         pval = ss.wilcoxon(df[mask]["p"+m], df[mask]["a"+m]).pvalue
         print(f"metric: {m}, area: {a}, pvalue: {pval}")
-    # save figure
-    f.savefig(os.path.join(figpath, f"fametric_{m}.svg"), dpi=500)

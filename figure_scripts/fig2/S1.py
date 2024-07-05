@@ -5,7 +5,7 @@ rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 import sys
 sys.path.append(rdir)
 from settings import RESULTS_DIR
-from plotting import penetration_map
+from helpers.plotting import penetration_map
 import pandas as pd
 import numpy as np
 
