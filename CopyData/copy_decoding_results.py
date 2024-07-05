@@ -14,6 +14,8 @@ sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
 LBHB_DIR = "/auto/users/hellerc/results/TBP-ms"
 
 modellist = [
+    # shared shape model for visualization in fig 3
+    'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
     # Standard active / passive decoding jobs
     'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise', 
     'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise',

@@ -24,6 +24,8 @@ db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
 sites = db.site
 
 modellist = [
+    # shared shape model for visualization in fig 3
+    'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace',
     # Standard active / passive decoding jobs
     'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise', 
     'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise',

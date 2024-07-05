@@ -13,8 +13,8 @@ sys.path.append(rdir)
 
 from settings import RESULTS_DIR
 import json
-import tin_helpers as thelp
-from plotting import plot_RT_histogram
+import helpers.tin_helpers as thelp
+from helpers.plotting import plot_RT_histogram
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl

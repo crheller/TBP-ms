@@ -8,7 +8,7 @@ import sys
 sys.path.append(rdir)
 
 from settings import RESULTS_DIR
-from path_helpers import local_results_file
+from helpers.path_helpers import local_results_file
 import pandas as pd
 import numpy as np
 import scipy.stats as ss
@@ -25,9 +25,11 @@ sqrt = True
 db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
 sites = db.site
 
+pupil_regress = "_PR" # if pupil_regress="", then use raw data. if = "_PR" use the pupil-corrected results
+
 # load decoding results
-amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
-pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+pupil_regress
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+pupil_regress
 active = []
 passive = []
 for site in sites:

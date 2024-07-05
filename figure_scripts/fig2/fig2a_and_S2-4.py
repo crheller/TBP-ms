@@ -10,7 +10,7 @@ sys.path.append(rdir)
 
 from settings import RESULTS_DIR
 import pandas as pd
-import tin_helpers as thelp
+import helpers.tin_helpers as thelp
 import scipy.ndimage.filters as sf
 import numpy as np
 import matplotlib.pyplot as plt

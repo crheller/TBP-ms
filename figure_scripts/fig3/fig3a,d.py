@@ -4,18 +4,17 @@ Plot example ellipse plot(s) in dDR space for A1 and dPEG
 """
 
 import os
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 import sys
-sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
-from settings import RESULTS_DIR, BAD_SITES
-from path_helpers import results_file
+sys.path.append(rdir)
 
-import charlieTools.TBP_ms.loaders as loaders
-import charlieTools.plotting as cplt
-import nems0.db as nd
-import nems_lbhb.tin_helpers as thelp
+from settings import RESULTS_DIR
+from helpers.path_helpers import local_results_file
+import helpers.loaders as loaders
+import helpers.plotting as cplt
+import helpers.tin_helpers as thelp
 import pandas as pd
 import numpy as np
-from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 mpl.rcParams['axes.spines.right'] = False
@@ -24,8 +23,6 @@ mpl.rcParams['font.size'] = 8
 mpl.rcParams['xtick.labelsize'] = 8 
 mpl.rcParams['ytick.labelsize'] = 8 
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig3/"
-
 batch = 324
 sqrt = True  # d', not d'^2
 fmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise-sharedSpace'
@@ -33,14 +30,12 @@ fmodel = 'tbpDecoding_mask.pa_decmask.h.cr.m.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-
 # load data from two example sites (one A1, one PEG)
 a1_site = "CRD016c"
 a1p, _ = loaders.load_tbp_for_decoding(site=a1_site, 
-                                    batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
                                     mask=["PASSIVE_EXPERIMENT"],
                                     recache=False)
 a1a, _ = loaders.load_tbp_for_decoding(site=a1_site, 
-                                    batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
@@ -48,14 +43,12 @@ a1a, _ = loaders.load_tbp_for_decoding(site=a1_site,
                                     recache=False)
 peg_site = "CRD010b"
 pegp, _ = loaders.load_tbp_for_decoding(site=peg_site, 
-                                    batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
                                     mask=["PASSIVE_EXPERIMENT"],
                                     recache=False)
 pega, _ = loaders.load_tbp_for_decoding(site=peg_site, 
-                                    batch=batch,
                                     wins = 0.1,
                                     wine = 0.4,
                                     collapse=True,
@@ -63,9 +56,9 @@ pega, _ = loaders.load_tbp_for_decoding(site=peg_site,
                                     recache=False)
 
 # get (fixed) dDR space for each site
-dd = pd.read_pickle(results_file(RESULTS_DIR, a1_site, batch, fmodel, "output.pickle"))
+dd = pd.read_pickle(local_results_file(RESULTS_DIR, a1_site, fmodel, "output.pickle"))
 a1_loading = dd["dr_loadings"].iloc[0]
-dd = pd.read_pickle(results_file(RESULTS_DIR, peg_site, batch, fmodel, "output.pickle"))
+dd = pd.read_pickle(local_results_file(RESULTS_DIR, peg_site, fmodel, "output.pickle"))
 peg_loading = dd["dr_loadings"].iloc[0]
 peg_loading[1, :] = -1 * peg_loading[1, :]
 
@@ -111,13 +104,6 @@ ymm = np.percentile(ax[1, 1].get_ylim()+ax[1, 0].get_ylim(), [0, 100])
 ax[1, 0].set_xlim(xmm); ax[1, 1].set_xlim(xmm)
 ax[1, 0].set_ylim(ymm); ax[1, 1].set_ylim(ymm)
 
-# for a in ax.flatten():
-#     a.set_xlabel(r"$\Delta \mu$")
-#     a.set_ylabel(r"$\sigma$")
-#     a.set_xticks([])
-#     a.set_yticks([])
-
 f.patch.set_facecolor("white")
 f.tight_layout()
 
-f.savefig(os.path.join(figpath, "ellipse_plot_examples.svg"), dpi=500)
