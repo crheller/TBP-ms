@@ -1,15 +1,13 @@
 """
 Compare behavioral vs. neural dprimes
 """
-import nems_lbhb.tin_helpers as thelp
-import nems0.db as nd
-
 import os
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 import sys
-sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
-from path_helpers import results_file
-from settings import RESULTS_DIR, BAD_SITES
+sys.path.append(rdir)
 
+from helpers.path_helpers import local_results_file
+from settings import RESULTS_DIR
 import scipy.stats as ss
 import pandas as pd
 import numpy as np
@@ -19,26 +17,22 @@ mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 mpl.rcParams['font.size'] = 10
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig4/"
-
-batch = 324
 sqrt = True
-sites = [s for s in nd.get_batch_sites(batch)[0] if s not in BAD_SITES]
+db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
+sites = db.site
 
 # load neural dprime
-fa = "" #"_FAperstim.1"
-amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+fa
-pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'+fa
+amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
+pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise'
 active = []
 passive = []
 for site in sites:
     try:
-        ares = pd.read_pickle(results_file(RESULTS_DIR, site, batch, amodel, "output.pickle"))
-        pres = pd.read_pickle(results_file(RESULTS_DIR, site, batch, pmodel, "output.pickle"))
+        area = db.loc[site, "area"]
+        ares = pd.read_pickle(local_results_file(RESULTS_DIR, site, amodel, "output.pickle"))
+        pres = pd.read_pickle(local_results_file(RESULTS_DIR, site, pmodel, "output.pickle"))
         ares["site"] = site
         pres["site"] = site
-        area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",))
-        area = area.iloc[0][0]
         ares["area"] = area
         pres["area"] = area
         if sqrt:
@@ -56,7 +50,7 @@ df["delta"] = (df["dp_y"] - df["dp_x"]) / (df["dp_y"] + df["dp_x"])
 df["delta_raw"] = df["dp_y"] - df["dp_x"]
 
 # load behavioral dprimes
-beh_df = pd.read_pickle(os.path.join(RESULTS_DIR, "behavior_recordings", "all_trials.pickle"))
+beh_df = pd.read_pickle(os.path.join(RESULTS_DIR, "behavior_recording", "all_trials.pickle"))
 
 # Plot relationship between behavior and neural dprime
 bg = beh_df.groupby(by=["site", "e1"]).mean()
@@ -111,8 +105,6 @@ for i, (df, c) in enumerate(zip([a1_merge, peg_merge], colors)):
 
 f.tight_layout()
 
-f.savefig(os.path.join(figpath, "delta_vs_behavior.svg"), dpi=500)
-
 # quantify significance of correlation using bootstrapping
 np.random.seed(123)
 nboots = 1000
@@ -163,43 +155,3 @@ ax.axhline(0, linestyle="--", color="grey")
 
 ax.set_xlim((-0.1, 1.1))
 ax.set_xticks([])
-
-f.savefig(os.path.join(figpath, "pearson_95conf.svg"), dpi=500)
-
-# Supplement for absolute dprime relationship only
-nboots = 100
-s = 10
-abs_ylim = (-0.1, 5)
-f, ax = plt.subplots(1, 2, figsize=(4, 2))
-
-for i, df in enumerate([a1_merge, peg_merge]):
-
-    x = df["dprime"]
-    xp = np.linspace(np.min(x), np.max(x), 100)
-    # raw dprime
-    r, p = ss.pearsonr(x, df["dp_x"])
-    leg = f"r={round(r, 3)}, p={round(p, 3)}"
-    ax[i].scatter(x, df["dp_x"], 
-                    s=s, c="grey", edgecolor="none", lw=0)
-    ax[i].set_title(f"{leg}")
-
-    # get line of best fit
-    z = np.polyfit(x, df["dp_x"], 1)
-    # plot line of best fit
-    p_y = z[1] + z[0] * xp
-    ax[i].plot(xp, p_y, lw=2, color="k")
-    
-    boot_preds = []
-    for bb in range(nboots):
-        ii = np.random.choice(np.arange(0, len(x)), len(x), replace=True)
-        zb = np.polyfit(x[ii], df["dp_x"][ii], 1)
-        p_yb = zb[1] + zb[0] * xp
-        boot_preds.append(p_yb)
-    bse = np.stack(boot_preds).std(axis=0)
-    lower = p_y - bse
-    upper = p_y + bse
-    ax[i].fill_between(xp, lower, upper, color="k", alpha=0.5, lw=0)
-
-    ax[i].set_ylim(abs_ylim)
-
-f.tight_layout()

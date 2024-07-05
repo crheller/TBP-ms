@@ -8,30 +8,30 @@ Point is that choice decoding does not change signficantly over the course of th
 This suggests that "choice" decoder readout is probably more like impulsivity (see pupil results -
 we have a per trial baseline difference in pupil between hit and miss trials
 """
+import os
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+import sys
+sys.path.append(rdir)
+
 import matplotlib.pyplot as plt
 import pandas as pd
-import nems_lbhb.tin_helpers as thelp
-import sys
-sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
-from path_helpers import results_file
-from settings import RESULTS_DIR, BAD_SITES
+import helpers.tin_helpers as thelp
+from helpers.path_helpers import local_results_file
+from settings import RESULTS_DIR
 import numpy as np
-import nems0.db as nd
 import scipy.stats as ss
-import os
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/choice_decoding"
-savefig = False
 
-target_model = "tbpChoiceDecoding_fs10_decision.h.m_DRops.dim2.ddr_FAperstim.5"
+target_model = "tbpChoiceDecoding_fs10_decision.h.m_DRops.dim2.ddr"
 
 twindows_early = [
     "ws0.0_we0.1_trial_fromfirst", 
     "ws0.1_we0.2_trial_fromfirst", 
     "ws0.2_we0.3_trial_fromfirst", 
     "ws0.3_we0.4_trial_fromfirst", 
-    "ws0.4_we0.5_trial_fromfirst"    
+    "ws0.4_we0.5_trial_fromfirst"
 ]
+
 twindows_late = [
     "ws0.0_we0.1_trial", 
     "ws0.1_we0.2_trial", 
@@ -40,10 +40,9 @@ twindows_late = [
     "ws0.4_we0.5_trial"
 ]
 
-batch = 324
 sqrt = True
-sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
-sites = [s for s in sites if s not in BAD_SITES]
+db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
+sites = db.site
 
 # TARGET ANALYSIS
 df = pd.DataFrame(columns=["dp", "cp", "tstart", "tend", "early", "snr", "area", "site", "shuffle"])
@@ -53,9 +52,8 @@ for site in sites:
         for twin in twindows_early+twindows_late:
             # actual results
             model = target_model.replace("Decoding_fs10_", f"Decoding_fs10_{twin}_")
-            res = pd.read_pickle(results_file(RESULTS_DIR, site, batch, model, "output.pickle"))    
-            area = nd.pd_query(sql=f"SELECT area from sCellFile where cellid like '%{site}%'")
-            area = area.iloc[0][0]
+            res = pd.read_pickle(local_results_file(RESULTS_DIR, site, model, "output.pickle"))    
+            area = db.loc[site, "area"]
             if sqrt:
                 res["dp"] = np.sqrt(res["dp"])
 
@@ -83,8 +81,8 @@ cmap = plt.get_cmap("Reds", 5)
 
 f = plt.figure(figsize=(6, 4))
 a1_taxis = plt.subplot2grid((2, 4), (0, 0), colspan=3)
-peg_taxis = plt.subplot2grid((2, 4), (1, 0), colspan=3)
 a1_evl = plt.subplot2grid((2, 4), (0, 3), colspan=1)
+peg_taxis = plt.subplot2grid((2, 4), (1, 0), colspan=3)
 peg_evl = plt.subplot2grid((2, 4), (1, 3), colspan=1)
 
 # plot time decoding, early windows, A1
@@ -135,8 +133,4 @@ for row, (axis, area, comp_ax) in enumerate(zip([a1_taxis, peg_taxis], ["A1", "P
     pval, stat = ss.wilcoxon(y[0, :], y[1, :])
     print(f"{area}, early vs. late, pval: {pval}, stat: {stat}")
 
-
 f.tight_layout()
-
-if savefig:
-    f.savefig(os.path.join(figpath, "choice_summary.svg"), dpi=500)

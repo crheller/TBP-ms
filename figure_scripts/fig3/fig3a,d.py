@@ -2,7 +2,6 @@
 Plot example ellipse plot(s) in dDR space for A1 and dPEG
     each 2x2 inches
 """
-
 import os
 rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 import sys
