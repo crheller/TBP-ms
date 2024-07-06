@@ -365,7 +365,7 @@ def load_FA_model_perstim(site, psth, state, sim=1, fa_model="FA_perstim", nreps
     # load the model results
     path = os.path.join(RESULTS_DIR, site)
     filename = f"{fa_model}.pickle"
-    with open(path + filename, 'rb') as handle:
+    with open(os.path.join(path, filename), 'rb') as handle:
         results = pickle.load(handle)
 
     cov_active = dict.fromkeys(psth.keys())
