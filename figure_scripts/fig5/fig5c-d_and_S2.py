@@ -1,16 +1,12 @@
-import charlieTools.TBP_ms.loaders as loaders
-import charlieTools.plotting as cplt
-import nems_lbhb.tin_helpers as thelp
-import nems0.db as nd
-import scipy.stats as ss
-from itertools import combinations
 import os
+rdir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 import sys
-sys.path.append("/auto/users/hellerc/code/projects/TBP-ms")
-from path_helpers import results_file
-from settings import RESULTS_DIR, BAD_SITES
+sys.path.append(rdir)
 
-import scipy.stats as stats
+from settings import RESULTS_DIR
+
+from helpers.path_helpers import local_results_file
+import scipy.stats as ss
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,28 +15,25 @@ mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 mpl.rcParams['font.size'] = 8
 
-figpath = "/auto/users/hellerc/code/projects/TBP-ms/figure_files/fig5"
-
 nboots = 1000 # for sig testing
 
 batch = 324
 sqrt = True
-sites = np.unique([s[:7] for s in nd.get_batch_cells(batch).cellid])
+db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
+sites = db.site
 
 factor_models = ["_FAperstim.0.PR", "_FAperstim.1.PR", "_FAperstim.3.PR", "_FAperstim.4.PR", ""]
 amodel = 'tbpDecoding_mask.h.cr.m_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
 pmodel = 'tbpDecoding_mask.pa_drmask.h.cr.m.pa_DRops.dim2.ddr-targetNoise_PR'
-sites = [s for s in sites if s not in BAD_SITES]
 active = []
 passive = []
 for site in sites:
     for fa in factor_models:
         try:
-            ares = pd.read_pickle(results_file(RESULTS_DIR, site, batch, amodel+fa, "output.pickle"))
-            pres = pd.read_pickle(results_file(RESULTS_DIR, site, batch, pmodel+fa, "output.pickle"))
+            ares = pd.read_pickle(local_results_file(RESULTS_DIR, site, amodel+fa, "output.pickle"))
+            pres = pd.read_pickle(local_results_file(RESULTS_DIR, site, pmodel+fa, "output.pickle"))
             ares["site"] = site; pres["site"] = site
-            area = nd.pd_query(sql="SELECT area from sCellFile where cellid like %s", params=(f"%{site}%",))
-            area = area.iloc[0][0]
+            area = db.loc[site, "area"]
             ares["area"] = area; pres["area"] = area
             ares["FA"] = fa; pres["FA"] = fa; 
             if sqrt:
@@ -124,9 +117,6 @@ for a in [ax, ax2]:
 for a in ax3.flatten():
     a.set_ylim((-0.25, 0.5)); a.set_xlim((-0.25, 0.5))
     a.plot([-0.25, 0.5], [-0.25, 0.5], "k--", zorder=-1)
-f.savefig(os.path.join(figpath, "delta_dprime_vals.svg"), dpi=500)
-f2.savefig(os.path.join(figpath, "delta_dprime_cc.svg"), dpi=500)
-f3.savefig(os.path.join(figpath, "delta_dprime_scatter.svg"), dpi=500)
 
 # selectivity
 print("SELECTIVITY")
@@ -182,5 +172,3 @@ for col, area in zip(["grey", "k"], ["A1", "PEG"]):
 ax2.set_ylim((None, 1))
 for a in [ax, ax2]:
     a.axhline(0, linestyle="--", color="k")
-f.savefig(os.path.join(figpath, "selectivity_vals.svg"), dpi=500)
-f2.savefig(os.path.join(figpath, "selectivity_cc.svg"), dpi=500)

@@ -30,7 +30,10 @@ log = logging.getLogger(__name__)
 db = pd.read_csv(os.path.join(RESULTS_DIR, "db.csv"), index_col=0)
 sites = db.site
 
-modelname = "FA_perstim_PR"
+modelname = [
+    "FA_perstim",
+    "FA_perstim_PR"
+]
 
 for site in sites:
     shuffle = False
