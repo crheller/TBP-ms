@@ -48,8 +48,6 @@ modellist = [
 ]
 
 sites = [s for s in sites if s not in BAD_SITES]
-active = []
-passive = []
 for site in sites:
     for model in modellist:
         f = results_file(LBHB_DIR, site, batch, model, "output.pickle")
